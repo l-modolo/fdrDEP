@@ -95,7 +95,7 @@ runseed = function(iter, zvalues, covariates, distances.included, hypothesis, al
 					alternativeCompartmentNumber = alternativeCompartmentNumber, 
 					dependency = dependency, 
 					ptol = ptol, 
-					maxiter = maxiter, 
+					maxiter = burn, 
 					iter.CG = iter.CG, 
 					v=v) }, warning = function(e) {print(e)}, error = function(e) {print(e)})
 			rm(seed_Mvar)
