@@ -46,11 +46,11 @@ fdrDEP = function(pvalues = x, covariates = NULL, distances = NULL, observerdVal
 		if(is.vector(covariates)==TRUE)
 		{
 			covariates = matrix(covariates,ncol=1)
-			covariates = scale(covariates)
+#			covariates = scale(covariates)
 		}
 		else
 		{
-			covariates = apply(covariates,2,scale)
+#			covariates = apply(covariates,2,scale)
 		}
 		if(dim(covariates)[1] != NUM)
 		{

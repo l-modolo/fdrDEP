@@ -112,7 +112,6 @@ Expectation = function(zvalues, Mvar, hypothesis, alternativeDistribution, alter
 			}
 		}
 	}
-	
 	return(list(gammA = gammA, dgammA = dgammA, omega = omega, c0 = c0, trans.par = Mvar$trans.par))
 }
 
