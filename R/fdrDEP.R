@@ -154,22 +154,43 @@ fdrDEP = function(pvalues = x, covariates = NULL, distances = NULL, observerdVal
 	}
 }
 
+#zvalueTransform = function (pvalues = x, hypothesis = "two.sided", threshold = 0, observerdValues = observerdValues)
+#{
+#	if (hypothesis == "two.sided") {
+#		zvalues = qnorm(pvalues/2, 0, 1)
+#		return(ifelse(observerdValues > threshold, abs(zvalues), -abs(zvalues)))
+#	}
+#	else {
+#		n = length(pvalues)
+#		zval = qnorm(pvalues, 0, 1)
+#		root = 0.517912715992179
+#		zvalues = qnorm(pvalues, 0, 1) + qnorm(root)
+#		zvalues[zvalues > 0] = 0
+#		if (n%%2 == 0) 
+#			return(ifelse(rep(c(TRUE, FALSE), n/2), abs(zvalues), -abs(zvalues)))
+#		else
+#			return(ifelse(rep(c(TRUE, FALSE), n/2 + 1), abs(zvalues), -abs(zvalues))[-(n + 1)])
+#	}
+#}
+
 zvalueTransform = function(pvalues = x, hypothesis = "two.sided", threshold = 0, observerdValues = observerdValues)
 {
 	if( hypothesis == "two.sided")
 	{
-		zvalues = qnorm( pvalues /2 ,0, 1)
+		zvalues = qnorm( pvalues/2 ,0, 1)
 		return( ifelse( observerdValues > threshold, abs(zvalues), -abs(zvalues) ) )
 	}
 	else
 	{
 		n = length(pvalues)
-		zval = qnorm(pvalues,0,1)
 		# FindRoot[Sqrt[2/Pi]/E^(x^2/2) + (-1 - Erf[x/Sqrt[2]])/2 == 0, {x, 0.468021, 0.635139}, WorkingPrecision -> 27]
 		root = 0.5179127159921794137280437785
-		zvalues = qnorm(pvalues,0,1) + qnorm(root)
-		zvalues[zvalues > 0] = 0
-		if(n %%2==0)
+		root = pnorm(root)
+		pvalues[pvalues >= root] = root
+		pvalues = pvalues / root
+		
+		zvalues = qnorm(pvalues/2,0,1)
+		if(n%%2==0)
 			return(ifelse(rep(c(TRUE, FALSE), n/2), abs(zvalues), -abs(zvalues)))
 		else
 			return(ifelse(rep(c(TRUE, FALSE), n/2+1), abs(zvalues), -abs(zvalues))[-(n+1)])
@@ -177,4 +198,44 @@ zvalueTransform = function(pvalues = x, hypothesis = "two.sided", threshold = 0,
 }
 
 
+LIS_graph = function (zval, LIS, k=F, title="")
+{
+#	plot(density(zval[zval != 0]))
+	hist(zval[zval != 0], nclass=sqrt(length(zval)), main=title, freq=F, xlim=c(-10,10), ylim=c(0,1), xlab="z-value", cex.main = 3, cex.lab = 2, cex.axis = 2.5)
+	
+	x_tmp = order(zval)
+	zval_tmp = zval[x_tmp]
+	f0 = c()
+	f1 = c()
+	if(length(LIS$f0) == 2)
+	{
+		f0 = LIS$ptheta[1] * dnorm(zval_tmp, LIS$f0[1], LIS$f0[2])
+	}
+	if(length(LIS$f0) == 3)
+	{
+		f0 = LIS$ptheta[1] * dnorm(zval_tmp, LIS$f0[1], LIS$f0[2])
+	}
+	if(length(LIS$f0) == 4)
+	{
+		f0 = LIS$ptheta[1] * (LIS$pnu[1] * dnorm(zval_tmp, LIS$f0[1], LIS$f0[2]) + LIS$pnu[2] * dnorm(zval_tmp, LIS$f0[1], LIS$f0[4] ))
+	}
+	
+	if(k)
+	{
+		f1 = LIS$ptheta[2] * LIS$f1[x_tmp]
+	}
+	else
+	{
+		f1 = rep(0, length(zval))
+		for(ell in 1:dim(LIS$f1)[1])
+		{
+			f1l = LIS$ptheta[2] * LIS$pc[ell]  * dnorm(zval_tmp, LIS$f1[ell,1], LIS$f1[ell,2])
+			abline(v=LIS$f1[ell,1], col="red")
+			f1 = f1 + f1l
+		}
+	}
+	lines(zval_tmp, f1 + f0, col="green", lwd=2)
+	lines(zval_tmp, f0, col="blue", lwd=3)
+	lines(zval_tmp, f1, col="red", lwd=3)
+}
 

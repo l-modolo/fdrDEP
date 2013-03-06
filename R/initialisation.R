@@ -60,6 +60,7 @@ runseed = function(iter, zvalues, covariates, distances.included, hypothesis, al
 	seedList = list(logL=-Inf)
 	while(length(seedList)<=2)
 	{
+		gc()
 		seed_Evar     = tryCatch({
 			seedinit(zvalues = zvalues, 
 					covariates = covariates, 
@@ -98,7 +99,6 @@ runseed = function(iter, zvalues, covariates, distances.included, hypothesis, al
 					maxiter = burn, 
 					iter.CG = iter.CG, 
 					v=v) }, warning = function(e) {print(e)}, error = function(e) {print(e)})
-			rm(seed_Mvar)
 		}
 		else
 		{
