@@ -128,26 +128,6 @@ ComputeGradient = function(covariates, distances.included, dgammA, gammA, trans.
 	}
 	
 	return(-gradient)
-	
-	N = dim(covariates)[1] - 1
-	
-	gradient      = rep(0,3+dim(covariates)[2])
-	
-	trans.prob    = pii.A(covariates, distances.included, trans.par, v = v)
-	
-	gradient[1] = gammA[1,2] - trans.prob$pii[2]
-	gradient[2] = sum(dgammA[1,2,] - gammA[-dim(gammA)[1],1]*trans.prob$A[1,2,])
-	gradient[3] = sum(dgammA[2,2,] - gammA[-dim(gammA)[1],2]*trans.prob$A[2,2,])
-	
-	tmp = gammA[-dim(covariates)[1],1]*trans.prob$A[1,2,] + gammA[-dim(covariates)[1],2]*trans.prob$A[2,2,]
-	gradient[-c(1:3)] = (gammA[1,2] - trans.prob$pii[2])*covariates[1,] + apply(matrix((gammA[-1,2] - tmp)*covariates[-1,],ncol=dim(covariates)[2]),2,sum)
-	
-	if(distances.included)
-	{
-		gradient[4] = (gammA[1,2] - trans.prob$pii[2]) * covariates[1,1] + sum( dgammA[1,2,] * covariates[-1,1] ) - sum( dgammA[2,2,] * covariates[-1,1] ) - sum( gammA[-dim(covariates)[1],1] * trans.prob$A[1,2,] * covariates[-1,1] ) + sum(gammA[-dim(covariates)[1],2]*trans.prob$A[2,2,] * covariates[-1,1])
-	}
-	
-	return(-gradient)
 }
 
 pii.A = function(covariates, distances.included, trans.par, v)
