@@ -183,9 +183,8 @@ zvalueTransform = function(pvalues = x, hypothesis = "two.sided", threshold = 0,
 	else
 	{
 		n = length(pvalues)
-		# FindRoot[Sqrt[2/Pi]/E^(x^2/2) + (-1 - Erf[x/Sqrt[2]])/2 == 0, {x, 0.468021, 0.635139}, WorkingPrecision -> 27]
-		root = 0.5179127159921794137280437785
-		root = pnorm(root)
+		# FindRoot[((1/Sqrt[2Pi])*E^(-x^2/2) ) / ( (1 + Erf[x/Sqrt[2]])/2) == 1/2, {x, 0.468021, 0.635139}, WorkingPrecision -> 27]
+		root = 0.517912715992179413728043779
 		pvalues[pvalues >= root] = root
 		pvalues = pvalues / root
 		
