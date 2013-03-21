@@ -1,6 +1,10 @@
 ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, iter.CG, ptol, v)
 {
-#	if(v) print("CG step")
+	#if(v) print("CG step")
+	#	cat("Saving input of ComputeCG\n")
+	#save(covariates, distances.included, dgammA, gammA, trans.par, iter.CG, ptol, v, file=paste("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/databenchs/inputComputeCG",dim(covariates)[1],".RData",sep=""))
+	#stop("Done")
+	
 	gradient.old = ComputeGradient(covariates, distances.included, dgammA, gammA, trans.par, v = v)
 	trans.par.old = trans.par
 	phi = rbind(rep(0, length(gradient.old)),-gradient.old)
@@ -33,7 +37,7 @@ ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, i
 	}
 	if(!is.na(tmp$nu))
 	{
-		tmp = pii.A(covariates, distances.included, trans.par, v = v)
+		tmp = pii.A.C(covariates, distances.included, trans.par, v = v)
 		return(list(pii = tmp$pii, A = tmp$A, trans.par = trans.par))
 	}else
 	{
@@ -74,7 +78,7 @@ LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, 
 		niter = niter + 1
 		trans.par.new[1,] = trans.par[1,] + nu * phi[1,]
 		trans.par.new[2,] = trans.par[2,] + nu * phi[2,]
-		trans.prob = pii.A(covariates, distances.included, trans.par.new, v = v)
+		trans.prob = pii.A.C(covariates, distances.included, trans.par.new, v = v)
 		dQ  =  sum( fixe_1   * (gammA[1,] - trans.prob$pii) )
 		dQ2 = -sum( fixe_1^2 * trans.prob$pii * (1 - trans.prob$pii) )
 		
@@ -107,44 +111,29 @@ ComputeGradient = function(covariates, distances.included, dgammA, gammA, trans.
 {
 	gradient <- rep(0,3+dim(covariates)[2])
 	
-	tmp.trans.prob = pii.A(covariates, distances.included, trans.par, v = v)
+	tmp.trans.prob = pii.A.C(covariates, distances.included, trans.par, v = v)
 	
 	pii <- tmp.trans.prob$pii
 	A <- tmp.trans.prob$A
 	
-	gradient[1] <- gammA[1,2] - pii[2]
-	gradient[2] <- sum(dgammA[1,2,] - gammA[-dim(gammA)[1],1]*A[1,2,])
-	gradient[3] <- sum(dgammA[2,2,] - gammA[-dim(gammA)[1],2]*A[2,2,])
+	gradient[1] <- gammA[1,2] - pii[2]										# G1
+	gradient[2] <- sum(dgammA[1,2,] - gammA[-dim(gammA)[1],1]*A[1,2,])		# G2
+	gradient[3] <- sum(dgammA[2,2,] - gammA[-dim(gammA)[1],2]*A[2,2,])		# G3
 	
 	tmp <- rep(0,dim(dgammA)[3])
 	
 	for(i in 1:2){
-		tmp <- tmp + gammA[-dim(covariates)[1],i]*A[i,2,] 
+		tmp <- tmp + gammA[-dim(covariates)[1],i]*A[i,2,] 					# G422
 	}
-	gradient[-c(1:3)] <- (gammA[1,2] - pii[2])*covariates[1,] + apply(matrix((gammA[-1,2] - tmp)*covariates[-1,],ncol=dim(covariates)[2]),2,sum)
+	gradient[-c(1:3)] <- (gammA[1,2] - pii[2])*covariates[1,] 				# G41
+	+ apply(matrix((gammA[-1,2] - tmp)*covariates[-1,],ncol=dim(covariates)[2]),2,sum) # G42 
 	
 	if(distances.included==TRUE){
-		gradient[4] <- (gammA[1,2] - pii[2])*covariates[1,1] + sum(dgammA[1,2,]*covariates[-1,1]) - sum(dgammA[2,2,]*covariates[-1,1]) - sum(gammA[-dim(covariates)[1],1]*A[1,2,]*covariates[-1,1]) + sum(gammA[-dim(covariates)[1],2]*A[2,2,]*covariates[-1,1])
-	}
-	
-	return(-gradient)
-	
-	N = dim(covariates)[1] - 1
-	
-	gradient      = rep(0,3+dim(covariates)[2])
-	
-	trans.prob    = pii.A(covariates, distances.included, trans.par, v = v)
-	
-	gradient[1] = gammA[1,2] - trans.prob$pii[2]
-	gradient[2] = sum(dgammA[1,2,] - gammA[-dim(gammA)[1],1]*trans.prob$A[1,2,])
-	gradient[3] = sum(dgammA[2,2,] - gammA[-dim(gammA)[1],2]*trans.prob$A[2,2,])
-	
-	tmp = gammA[-dim(covariates)[1],1]*trans.prob$A[1,2,] + gammA[-dim(covariates)[1],2]*trans.prob$A[2,2,]
-	gradient[-c(1:3)] = (gammA[1,2] - trans.prob$pii[2])*covariates[1,] + apply(matrix((gammA[-1,2] - tmp)*covariates[-1,],ncol=dim(covariates)[2]),2,sum)
-	
-	if(distances.included)
-	{
-		gradient[4] = (gammA[1,2] - trans.prob$pii[2]) * covariates[1,1] + sum( dgammA[1,2,] * covariates[-1,1] ) - sum( dgammA[2,2,] * covariates[-1,1] ) - sum( gammA[-dim(covariates)[1],1] * trans.prob$A[1,2,] * covariates[-1,1] ) + sum(gammA[-dim(covariates)[1],2]*trans.prob$A[2,2,] * covariates[-1,1])
+		gradient[4] <- (gammA[1,2] - pii[2])*covariates[1,1] 
+		+ sum(dgammA[1,2,]*covariates[-1,1]) 
+		- sum(dgammA[2,2,]*covariates[-1,1]) 
+		- sum(gammA[-dim(covariates)[1],1]*A[1,2,]*covariates[-1,1]) 
+		+ sum(gammA[-dim(covariates)[1],2]*A[2,2,]*covariates[-1,1])
 	}
 	
 	return(-gradient)
@@ -160,7 +149,9 @@ pii.A = function(covariates, distances.included, trans.par, v)
 	pii <- rep(0,2)
 	A <- array(0,c(2,2,dim(covariates)[1]-1))
 	
-	pii[1] <- sum(exp(trans.par1[1] + sum(trans.par1[-c(1:3)]*covariates[1,])))/(sum(exp(trans.par1[1] + sum(trans.par1[-c(1:3)]*covariates[1,]))) + sum(exp(trans.par2[1] + sum(trans.par2[-c(1:3)]*covariates[1,]))))
+	pii[1] <- sum(exp(trans.par1[1] + sum(trans.par1[-c(1:3)]*covariates[1,])))/
+			( sum(exp(trans.par1[1] + sum(trans.par1[-c(1:3)]*covariates[1,]))) 
+			+ sum(exp(trans.par2[1] + sum(trans.par2[-c(1:3)]*covariates[1,]))) )
 	pii[2] = 1 - pii[1]
 	
 	tmp12 <- t(trans.par2[-c(1:3)]*t(covariates[-1,]))
@@ -191,5 +182,15 @@ pii.A = function(covariates, distances.included, trans.par, v)
 	A[2,2,] <- num22/(num21 + num22)
 	
 	return(list(A = A, pii = pii))
+}
+
+pii.A.C = function(covariates, distances.included, trans.par, v)
+{
+	pii <- rep(0,2)
+	A <- array(0,c(2,2,dim(covariates)[1]-1))
+	res <- .C('C_piiA', as.integer(dim(covariates)[1]), as.integer(dim(covariates)[2]), as.double(covariates), 
+			as.integer(distances.included), as.double(trans.par), as.integer(v), 
+			respii = as.double(pii), resA = as.double(A))
+	return(list(A =  array(res$resA, dim(A)), pii = res$respii))
 }
 
