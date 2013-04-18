@@ -176,35 +176,38 @@ if (SIMUL){
 # complexity CPU : kernel < mixnormal
 # complexity memory : mixnormal < kernel
 NBCORES=1
-Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnonek.out")
-fit.none.k = fdrDEP(pvalues = x, covariates = NULL, distances = NULL, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'none', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
-Rprof()
-summaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnonek.out")
 
-Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fithmmk.out")
-fit.hmm.k = fdrDEP(pvalues = x, covariates = NULL, distances = NULL, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'HMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
-Rprof()
-summaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fithmmk.out")
+#Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnonek.out")
+#Rfit.none.k = fdrDEP(pvalues = x, covariates = NULL, distances = NULL, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'none', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
+#Rprof()
+#RsummaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnonek.out")
+
+#Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fithmmk.out")
+#Rfit.hmm.k = fdrDEP(pvalues = x, covariates = NULL, distances = NULL, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'HMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
+#Rprof()
+#RsummaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fithmmk.out")
 
 Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnhmmk.out")
-fit.nhmm.k = fdrDEP(pvalues = x, covariates = Z, distances = Dist, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'NHMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
+Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnhmmk_C.out")
+Rfit.nhmm.k = fdrDEP(pvalues = x, covariates = Z, distances = Dist, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'NHMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
 Rprof()
 summaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnhmmk.out")
+summaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnhmmk_C.out")
 
-Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnonemix.out")
-fit.none.mix = fdrDEP(pvalues = x, covariates = NULL, distances = NULL, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'mixnormal', alternativeCompartmentNumber = 2, dependency = 'none', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
-Rprof()
-summaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnonemix.out")
+#Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnonemix.out")
+#Rfit.none.mix = fdrDEP(pvalues = x, covariates = NULL, distances = NULL, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'mixnormal', alternativeCompartmentNumber = 2, dependency = 'none', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
+#Rprof()
+#RsummaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnonemix.out")
 
-Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fithmmmix.out")
-fit.hmm.mix = fdrDEP(pvalues = x, covariates = NULL, distances = NULL, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'mixnormal', alternativeCompartmentNumber = 2, dependency = 'HMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
-Rprof()
-summaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fithmmmix.out")
+#Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fithmmmix.out")
+#Rfit.hmm.mix = fdrDEP(pvalues = x, covariates = NULL, distances = NULL, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'mixnormal', alternativeCompartmentNumber = 2, dependency = 'HMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
+#Rprof()
+#RsummaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fithmmmix.out")
 
-Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnhmmmix.out")
-fit.nhmm.mix = fdrDEP(pvalues = x, covariates = Z, distances = Dist, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'mixnormal', alternativeCompartmentNumber = 2, dependency = 'NHMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
-Rprof()
-summaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnhmmmix.out")
+#Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnhmmmix.out")
+#Rfit.nhmm.mix = fdrDEP(pvalues = x, covariates = Z, distances = Dist, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'mixnormal', alternativeCompartmentNumber = 2, dependency = 'NHMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
+#Rprof()
+#RsummaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnhmmmix.out")
 
 
 ############################# display results ##################################

@@ -22,7 +22,7 @@ load(paste("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/databenchs/inputComp
 
 #cg = ComputeCG(covariates, distances.included, dgammA, gammA, trans.par, iter.CG, ptol, v)
 
-distances.included = FALSE
+#distances.included = FALSE
 
 tmp.trans.prob = pii.A(covariates, distances.included, trans.par, v)
 cat(tmp.trans.prob$pii,"\n")
@@ -31,3 +31,12 @@ cat(tmp.trans.prob$A[1,1,1], tmp.trans.prob$A[1,2,1], tmp.trans.prob$A[2,1,1], t
 tmp.trans.prob.C = pii.A.C(covariates, distances.included, trans.par, v)
 cat(tmp.trans.prob.C$pii,"\n")
 cat(tmp.trans.prob.C$A[1,1,1], tmp.trans.prob.C$A[1,2,1], tmp.trans.prob.C$A[2,1,1], tmp.trans.prob.C$A[2,2,1], tmp.trans.prob.C$A[1,1,3], tmp.trans.prob.C$A[1,1,4], tmp.trans.prob.C$A[1,2,4],"\n")
+
+
+distances.included = FALSE
+
+tmp.gr = ComputeGradient(covariates, distances.included, dgammA, gammA, trans.par, v)
+cat(tmp.gr,"\n")
+
+tmp.gr.C = ComputeGradient.C(covariates, distances.included, dgammA, gammA, trans.par, v)
+cat(tmp.gr.C,"\n")
