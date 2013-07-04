@@ -2,7 +2,9 @@
 #include<Rdefines.h>
 #include<iostream>
 
-// Nota Bene: R stores matrices columnwise:
+// Nota Bene: R stores matrices columnwise
+
+// dimensions: p covariates, m points
 // transpar: 2x(1+2+p)
 #define transpar(i,j) transpar[i+2*(j)]
 // covariates: is a matrix of size m x p
@@ -13,8 +15,44 @@
 #define dgammA(i,j,k) dgammA[i+2*(j)+4*(k)]
 // gamma: m x 2
 #define gammA(i,j) gammA[i+m*(j)]
+// phi: 2x(1+2+p)
+#define phi(i,j) phi[i+2*(j)]
 
 extern "C" {
+
+  void C_LineSearch(int* m_ptr, int* p_ptr,
+      double* covariates,
+      int* distancesincluded,
+      double* dgammA,
+      double* gammA,
+      double* transpar,
+      double* phi,
+      int* iterCG,
+      double* tol,
+      int* v,
+      double* nu,
+      double* transparnew)
+    {
+      unsigned int p = *p_ptr, m = *m_ptr;
+      double fixe1[2];
+      for (int k=0; k<2; k++){
+        fixe1[k] = phi(k,0);
+        for (unsigned int j=0; j<p; j++){
+            Rprintf("%f %f\n",phi(k,1+2+j), covariates(0,j));
+            fixe1[k] += phi(k,1+2+j) * covariates(0,j);
+        }
+      }
+      Rprintf("fixe1: %f %f\n", fixe1[0],fixe1[1]);
+
+      double* fixe2 = new double[2*2*(m-1)];
+      delete[] fixe2;
+      for(int i=0; i<2; i++)
+          for(int j=0; j<2; j++){
+              double s = 0.;
+              for(int k=1; k<m; k++)
+                s += 0;
+          }
+    }
 
 void C_piiA(int* m_ptr, int* p_ptr,
       double* covariates,

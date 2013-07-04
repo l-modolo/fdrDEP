@@ -1,7 +1,7 @@
 #!/usr/bin/Rscript
 options(width = 320)
 
-system("R CMD build /home/vmiele/Collaborations/Modolo/fdrDEP && mv fdrDEP_1.0.0.tar.gz /tmp")
+system("R CMD build .. && mv fdrDEP_1.0.0.tar.gz /tmp")
 try(remove.packages("fdrDEP"))
 install.packages("/tmp/fdrDEP_1.0.0.tar.gz")
 library(fdrDEP)
@@ -136,7 +136,6 @@ display_data = function(x, fit, k = F)
 
 # size of the data
 NUM1 = 2000 # 2000 = quick; 20000 = slow
-
 SIMUL=FALSE
 if (SIMUL){
 	Z = rnorm(NUM1)
@@ -165,9 +164,9 @@ if (SIMUL){
 	theta1 = simdat$s
 	table(theta1)
 	
-	save.image(file = paste("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/databenchs/bench", NUM1, ".RData", sep=""))
+	save.image(file = paste("databenchs/bench", NUM1, ".RData", sep=""))
 } else{
-	load(paste("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/databenchs/bench", NUM1, ".RData", sep=""))
+	load(paste("databenchs/bench", NUM1, ".RData", sep=""))
 }
 
 # Model fitting
@@ -177,37 +176,38 @@ if (SIMUL){
 # complexity memory : mixnormal < kernel
 NBCORES=1
 
-#Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnonek.out")
+#Rprof("profiling/fitnonek.out")
 #Rfit.none.k = fdrDEP(pvalues = x, covariates = NULL, distances = NULL, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'none', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
 #Rprof()
-#RsummaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnonek.out")
+#RsummaryRprof("profiling/fitnonek.out")
 
-#Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fithmmk.out")
+#Rprof("profiling/fithmmk.out")
 #Rfit.hmm.k = fdrDEP(pvalues = x, covariates = NULL, distances = NULL, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'HMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
 #Rprof()
-#RsummaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fithmmk.out")
+#RsummaryRprof("profiling/fithmmk.out")
 
-Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnhmmk.out")
-Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnhmmk_C.out")
+Rprof("profiling/fitnhmmk.out")
+#Rprof("profiling/fitnhmmk_C.out")
+set.seed(63)
 Rfit.nhmm.k = fdrDEP(pvalues = x, covariates = Z, distances = Dist, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'NHMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
 Rprof()
-summaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnhmmk.out")
-summaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnhmmk_C.out")
+summaryRprof("profiling/fitnhmmk.out")
+#summaryRprof("profiling/fitnhmmk_C.out")
 
-#Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnonemix.out")
+#Rprof("profiling/fitnonemix.out")
 #Rfit.none.mix = fdrDEP(pvalues = x, covariates = NULL, distances = NULL, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'mixnormal', alternativeCompartmentNumber = 2, dependency = 'none', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
 #Rprof()
-#RsummaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnonemix.out")
+#RsummaryRprof("profiling/fitnonemix.out")
 
-#Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fithmmmix.out")
+#Rprof("profiling/fithmmmix.out")
 #Rfit.hmm.mix = fdrDEP(pvalues = x, covariates = NULL, distances = NULL, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'mixnormal', alternativeCompartmentNumber = 2, dependency = 'HMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
 #Rprof()
-#RsummaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fithmmmix.out")
+#RsummaryRprof("profiling/fithmmmix.out")
 
-#Rprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnhmmmix.out")
+#Rprof("profiling/fitnhmmmix.out")
 #Rfit.nhmm.mix = fdrDEP(pvalues = x, covariates = Z, distances = Dist, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'mixnormal', alternativeCompartmentNumber = 2, dependency = 'NHMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
 #Rprof()
-#RsummaryRprof("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/profiling/fitnhmmmix.out")
+#RsummaryRprof("profiling/fitnhmmmix.out")
 
 
 ############################# display results ##################################

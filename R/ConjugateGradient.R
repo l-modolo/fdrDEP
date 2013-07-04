@@ -107,6 +107,20 @@ LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, 
 	return(list(nu = nu, trans.par = trans.par.new))
 }
 
+LineSearch.C = function(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v)
+{
+	nu = 0
+	trans.par.new = trans.par
+	res <- .C('C_LineSearch', as.integer(dim(covariates)[1]), as.integer(dim(covariates)[2]),  
+			as.double(covariates), 
+			as.integer(distances.included),
+			as.double(dgammA), as.double(gammA), 
+			as.double(trans.par), as.double(phi), as.integer(iter.CG), 
+			as.double(ptol), as.integer(v),
+			resnu = as.double(nu), restrans.par.new = as.double(trans.par.new))
+	return(list(nu = res$resnu, trans.par = res$restrans.par.new))
+}
+	
 ComputeGradient = function(covariates, distances.included, dgammA, gammA, trans.par, v)
 {
 	gradient <- rep(0,3+dim(covariates)[2])
