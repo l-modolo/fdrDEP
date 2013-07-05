@@ -158,7 +158,8 @@ seedinit = function(zvalues, covariates, distances.included, A11, A22, alternati
 		while(A_22 + 1e-4 >= 1 | A_22 - 1e-4 <= 0)
 		{
 			A_22 = rbeta(1, A22, 1-A22)
-		}
+		}		
+				
 		A[1,1,] = A_11
 		A[1,2,] = 1 - A[1,1,1]
 		A[2,2,] = A_22
