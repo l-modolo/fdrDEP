@@ -14,7 +14,7 @@ ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, i
 	{
 		trans.par.old = trans.par
 		niter = niter + 1
-		tmp = tryCatch({ LineSearch(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v) }, warning = function(e) {print(e)}, error = function(e) {print(e)})
+		tmp = tryCatch({ LineSearch.C(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v) }, warning = function(e) {print(e)}, error = function(e) {print(e)})
 		if(is.na(tmp$nu))
 		{
 			break
@@ -45,6 +45,29 @@ ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, i
 	}
 }
 
+ComputeCG.C = function(covariates, distances.included, dgammA, gammA, trans.par, iter.CG, ptol, v)
+{
+	trans.par.old = trans.par
+	trans.par.new = trans.par
+	gradient.new <- rep(0,3+dim(covariates)[2])
+	gradient.old <- rep(0,3+dim(covariates)[2])
+	phi = rbind(rep(0, length(gradient.old)),-gradient.old)
+	nu = 0
+	pii <- rep(0,2)
+	A <- array(0,c(2,2,dim(covariates)[1]-1))
+	.C('C_ComputeCG', as.integer(dim(covariates)[1]), as.integer(dim(covariates)[2]),
+	as.double(covariates), as.integer(distances.included),
+	as.double(dgammA), as.double(gammA),
+	as.double(trans.par), as.double(trans.par.old), as.double(trans.par.new), 
+	as.double(phi), as.double(nu),
+	as.integer(iter.CG), as.double(ptol), as.integer(v),
+	as.double(gradient.new), as.double(gradient.old),
+	as.integer(v),
+	as.double(pii), as.double(A))
+	
+	return(list(pii = res$pii, A = array(res$resA, dim(A)), trans.par = matrix(res$restrans.par.new, nrow=2)))
+}
+
 LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v)
 {
 	N = dim(covariates)[1] - 1
@@ -56,7 +79,6 @@ LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, 
 	trans.par.new = trans.par
 	
 	fixe_1 = phi[,1] + sum( phi[,-c(1:3)] * covariates[1,] )
-	
 	if(distances.included)
 	{
 		fixe_1 = phi[,1] + sum( c(-phi[,4],phi[,-c(1:4)]) * covariates[1,] )
@@ -87,9 +109,11 @@ LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, 
 			{
 				dQ = dQ + sum( fixe_2[i,j,] * ( dgammA[i,j,] - ( gammA[-dim(gammA)[1],i] * trans.prob$A[i,j,] ) ) )
 				dQ2 = dQ2 - sum( fixe_2[i,j,]^2 * trans.prob$A[i,j,] * ( 1 - trans.prob$A[i,j,] ) * gammA[-dim(gammA)[1], i] )
+#				cat("dQ1_tmp", sum( fixe_2[i,j,] * ( dgammA[i,j,] - ( gammA[-dim(gammA)[1],i] * trans.prob$A[i,j,] ) ) ), "\n")
+#				cat("dQ2_tmp", sum( fixe_2[i,j,]^2 * trans.prob$A[i,j,] * ( 1 - trans.prob$A[i,j,] ) * gammA[-dim(gammA)[1], i] ), "\n")
 			}
 		}
-		cat("dQ", dQ, "\ndQ2", dQ2, "\n")
+#		cat("dQ : ", dQ, "\ndQ2 : ", dQ2, "\n")
 		nu = nu - dQ / dQ2
 		difference = abs(dQ/ dQ2)
 		if(is.na(difference) | niter > 100){

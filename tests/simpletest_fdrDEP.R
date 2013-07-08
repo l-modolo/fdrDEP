@@ -17,7 +17,7 @@ library(fdrDEP)
 
 ################################ focus on ConjugateGradient ################################
 
-NUM1 = 20000 # 2000 = quick; 20000 = slow
+NUM1 = 2000 # 2000 = quick; 20000 = slow
 load(paste("databenchs/inputComputeCG",NUM1,".RData",sep=""))
 
 ################################
@@ -41,6 +41,7 @@ tmp.gr.C = ComputeGradient.C(covariates, distances.included, dgammA, gammA, tran
 cat(tmp.gr.C,"\n")
 
 ################################
+cat("\n\n")
 distances.included = FALSE
 #distances.included = TRUE
 
@@ -51,8 +52,9 @@ print(phi)
 
 cat("\nLineSearch\n")
 tmp.ls = LineSearch(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v)
-cat(tmp.ls$nu,"\n",tmp.ls$trans.par,"\n")
+cat("nu : ", tmp.ls$nu,"\n")
+print(tmp.ls$trans.par)
 cat("\nLineSearch.C\n")
 tmp.ls.C = LineSearch.C(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v)
-cat(tmp.ls.C$nu,"\n",tmp.ls.C$trans.par,"\n")
-
+cat("nu : ", tmp.ls.C$nu,"\n")
+print(tmp.ls.C$trans.par)

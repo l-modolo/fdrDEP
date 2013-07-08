@@ -81,6 +81,7 @@ Maximisation = function(zvalues, covariates, distances.included, Evar, hypothesi
 	{
 		CG = list()
 		CG = tryCatch({ComputeCG(covariates, distances.included, Evar$dgammA, Evar$gammA, Evar$trans.par, iter.CG = iter.CG, ptol, v = v) }, warning = function(e) {print(e)}, error = function(e) {print(e)})
+#		CG = tryCatch({ComputeCG.C(covariates, distances.included, Evar$dgammA, Evar$gammA, Evar$trans.par, iter.CG = iter.CG, ptol, v = v) }, warning = function(e) {print(e)}, error = function(e) {print(e)})
 		if(length(CG) == 1)
 		{
 			if(v) print("Error in CG")
