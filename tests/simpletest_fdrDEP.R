@@ -43,7 +43,7 @@ cat(tmp.gr.C,"\n")
 ################################
 cat("\n\n")
 distances.included = FALSE
-#distances.included = TRUE
+distances.included = TRUE
 
 gradient.old = ComputeGradient.C(covariates, distances.included, dgammA, gammA, trans.par, v)
 phi = rbind(rep(0, length(gradient.old)),-gradient.old)

@@ -91,12 +91,16 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 	for (k=0; k < 3+p; k++)
 	{
 		phi(0,k) = 0;
+		transpar(0,k) = 0;
 	}
 	
 	for (int j = 0; j < 2; j++)
 	{
 		if (*distancesincluded)
+		{
 			phi(j,3) = abs(phi(j,3));
+			transpar(j,3) = abs(transpar(j,3));
+		}
 	}
 	
 	while (difference > *ptol && niter < *iterCG)
@@ -176,7 +180,7 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 	{
 		for (k=0; k < 3+p; k++)
 		{
-			transpar(j,k) = transpar(j,k) + *nu * phi(j,k);
+			transparnew(j,k) = transpar(j,k) + *nu * phi(j,k);
 		}
 	}
 }

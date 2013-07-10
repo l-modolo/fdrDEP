@@ -56,15 +56,14 @@ ComputeCG.C = function(covariates, distances.included, dgammA, gammA, trans.par,
 	pii <- rep(0,2)
 	A <- array(0,c(2,2,dim(covariates)[1]-1))
 	.C('C_ComputeCG', as.integer(dim(covariates)[1]), as.integer(dim(covariates)[2]),
-	as.double(covariates), as.integer(distances.included),
-	as.double(dgammA), as.double(gammA),
-	as.double(trans.par), as.double(trans.par.old), as.double(trans.par.new), 
-	as.double(phi), as.double(nu),
-	as.integer(iter.CG), as.double(ptol), as.integer(v),
-	as.double(gradient.new), as.double(gradient.old),
-	as.integer(v),
-	as.double(pii), as.double(A))
-	
+		as.double(covariates), as.integer(distances.included),
+		as.double(dgammA), as.double(gammA),
+		as.double(trans.par), as.double(trans.par.old), as.double(trans.par.new), 
+		as.double(phi), as.double(nu),
+		as.integer(iter.CG), as.double(ptol), as.integer(v),
+		as.double(gradient.new), as.double(gradient.old),
+		as.integer(v),
+		as.double(pii), as.double(A))
 	return(list(pii = res$pii, A = array(res$resA, dim(A)), trans.par = matrix(res$restrans.par.new, nrow=2)))
 }
 
@@ -137,13 +136,13 @@ LineSearch.C = function(covariates, distances.included, dgammA, gammA, trans.par
 	pii <- rep(0,2)
 	A <- array(0,c(2,2,dim(covariates)[1]-1))
 	res <- .C('C_LineSearch', as.integer(dim(covariates)[1]), as.integer(dim(covariates)[2]),
-	as.double(covariates),
-	as.integer(distances.included),
-	as.double(dgammA), as.double(gammA),
-	as.double(trans.par), as.double(phi), as.integer(iter.CG),
-	as.double(ptol), as.integer(v),
-	resnu = as.double(nu), restrans.par.new = as.double(trans.par.new),
-	respii = as.double(pii), resA = as.double(A))
+		as.double(covariates),
+		as.integer(distances.included),
+		as.double(dgammA), as.double(gammA),
+		as.double(trans.par), as.double(phi), as.integer(iter.CG),
+		as.double(ptol), as.integer(v),
+		resnu = as.double(nu), restrans.par.new = as.double(trans.par.new),
+		respii = as.double(pii), resA = as.double(A))
 	return(list(nu = res$resnu, trans.par = matrix(res$restrans.par.new, nrow=2)))
 }
 
@@ -185,12 +184,12 @@ ComputeGradient.C = function(covariates, distances.included, dgammA, gammA, tran
 	pii <- rep(0,2)
 	A <- array(0,c(2,2,dim(covariates)[1]-1))
 	res <- .C('C_ComputeGradient', as.integer(dim(covariates)[1]), as.integer(dim(covariates)[2]),
-	as.double(covariates),
-	as.integer(distances.included),
-	as.double(dgammA), as.double(gammA),
-	as.double(trans.par), as.integer(v),
-	as.double(pii), as.double(A),
-	resgradient = as.double(gradient))
+		as.double(covariates),
+		as.integer(distances.included),
+		as.double(dgammA), as.double(gammA),
+		as.double(trans.par), as.integer(v),
+		as.double(pii), as.double(A),
+		resgradient = as.double(gradient))
 	return(-res$resgradient)
 }
 
@@ -244,8 +243,8 @@ pii.A.C = function(covariates, distances.included, trans.par, v)
 	pii <- rep(0,2)
 	A <- array(0,c(2,2,dim(covariates)[1]-1))
 	res <- .C('C_piiA', as.integer(dim(covariates)[1]), as.integer(dim(covariates)[2]), as.double(covariates),
-	as.integer(distances.included), as.double(trans.par), as.integer(v),
-	respii = as.double(pii), resA = as.double(A))
+		as.integer(distances.included), as.double(trans.par), as.integer(v),
+		respii = as.double(pii), resA = as.double(A))
 	return(list(A = array(res$resA, dim(A)), pii = res$respii))
 }
 
