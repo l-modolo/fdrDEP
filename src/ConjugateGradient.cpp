@@ -88,6 +88,11 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 	double difference = 1.0;
 	double dQ, dQ2, dQ_tmp, dQ2_tmp1, dQ2_tmp2;
 	
+	for (k=0; k < 3+p; k++)
+	{
+		phi(0,k) = 0;
+	}
+	
 	for (int j = 0; j < 2; j++)
 	{
 		if (*distancesincluded)
