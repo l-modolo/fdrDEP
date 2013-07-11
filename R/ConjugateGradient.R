@@ -6,21 +6,23 @@ ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, i
 	#stop("Done")
 	
 	gradient.old = ComputeGradient.C(covariates, distances.included, dgammA, gammA, trans.par, v = v)
+	if(length(gradient.old) == 1) {return(-1)}
 	trans.par.old = trans.par
 	phi = rbind(rep(0, length(gradient.old)),-gradient.old)
+	
 	difference = 1
 	niter = 0
 	while(difference > ptol & niter < iter.CG)
 	{
 		trans.par.old = trans.par
 		niter = niter + 1
-		tmp = tryCatch({ LineSearch.C(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v) }, warning = function(e) {print(e)}, error = function(e) {print(e)})
-		if(is.na(tmp$nu))
-		{
-			break
-		}
+		tmp = LineSearch.C(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v) 
+		if(length(tmp) == 1) { return(-1) }
+		
 		trans.par = tmp$trans.par
 		gradient.new = ComputeGradient.C(covariates, distances.included, dgammA, gammA, trans.par, v = v)
+		if(length(gradient.new) == 1) { return(-1) }
+		
 		PR = sum((gradient.new - gradient.old)*gradient.new) / sum(gradient.old^2)
 		if(is.nan(PR) | PR < 0)
 		{
@@ -35,14 +37,80 @@ ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, i
 		}
 		difference = max(abs(trans.par[2,-1] - trans.par.old[2,-1]))
 	}
-	if(!is.na(tmp$nu))
-	{
-		tmp = pii.A.C(covariates, distances.included, trans.par, v = v)
-		return(list(pii = tmp$pii, A = tmp$A, trans.par = trans.par))
-	}else
+	if(length(tmp) == 1)
 	{
 		return(-1)
 	}
+	else
+	{
+		tmp = pii.A.C(covariates, distances.included, trans.par, v = v)
+		return(list(pii = tmp$pii, A = tmp$A, trans.par = trans.par))
+	}
+}
+
+LineSearch.C = function(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v)
+{
+	nu = 0
+	trans.par.new = trans.par
+	pii <- rep(0,2)
+	A <- array(0,c(2,2,dim(covariates)[1]-1))
+	res <- tryCatch({
+		.C('C_LineSearch',
+			as.integer(dim(covariates)[1]),
+			as.integer(dim(covariates)[2]),
+			as.double(covariates),
+			as.integer(distances.included),
+			as.double(dgammA), 
+			as.double(gammA),
+			as.double(trans.par),
+			as.double(phi),
+			as.integer(iter.CG),
+			as.double(ptol),
+			as.integer(v),
+			resnu = as.double(nu), restrans.par.new = as.double(trans.par.new), as.double(pii), as.double(A))
+	}, warning = function(e) {return(-1)}, error = function(e) {return(-1)})
+	if(length(res) == 1)
+		return(-1)
+	return(list(nu = res$resnu, trans.par = matrix(res$restrans.par.new, nrow=2)))
+}
+
+ComputeGradient.C = function(covariates, distances.included, dgammA, gammA, trans.par, v)
+{
+	gradient <- rep(0,3+dim(covariates)[2])
+	pii <- rep(0,2)
+	A <- array(0,c(2,2,dim(covariates)[1]-1))
+	res <- tryCatch({
+		.C('C_ComputeGradient',
+			as.integer(dim(covariates)[1]),
+			as.integer(dim(covariates)[2]),
+			as.double(covariates),
+			as.integer(distances.included),
+			as.double(dgammA),
+			as.double(gammA),
+			as.double(trans.par),
+			as.integer(v),
+			as.double(pii),
+			as.double(A),
+			resgradient = as.double(gradient))
+	}, warning = function(e) {return(-1)}, error = function(e) {return(-1)})
+	if(length(res) == 1)
+		return(-1)
+	return(-res$resgradient)
+}
+
+pii.A.C = function(covariates, distances.included, trans.par, v)
+{
+	pii <- rep(0,2)
+	A <- array(0,c(2,2,dim(covariates)[1]-1))
+	res <- .C('C_piiA',
+		as.integer(dim(covariates)[1]),
+		as.integer(dim(covariates)[2]),
+		as.double(covariates),
+		as.integer(distances.included),
+		as.double(trans.par),
+		as.integer(v),
+		respii = as.double(pii), resA = as.double(A))
+	return(list(A = array(res$resA, dim(A)), pii = res$respii))
 }
 
 ComputeCG.C = function(covariates, distances.included, dgammA, gammA, trans.par, iter.CG, ptol, v)
@@ -129,23 +197,6 @@ LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, 
 	return(list(nu = nu, trans.par = trans.par.new))
 }
 
-LineSearch.C = function(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v)
-{
-	nu = 0
-	trans.par.new = trans.par
-	pii <- rep(0,2)
-	A <- array(0,c(2,2,dim(covariates)[1]-1))
-	res <- .C('C_LineSearch', as.integer(dim(covariates)[1]), as.integer(dim(covariates)[2]),
-		as.double(covariates),
-		as.integer(distances.included),
-		as.double(dgammA), as.double(gammA),
-		as.double(trans.par), as.double(phi), as.integer(iter.CG),
-		as.double(ptol), as.integer(v),
-		resnu = as.double(nu), restrans.par.new = as.double(trans.par.new),
-		respii = as.double(pii), resA = as.double(A))
-	return(list(nu = res$resnu, trans.par = matrix(res$restrans.par.new, nrow=2)))
-}
-
 ComputeGradient = function(covariates, distances.included, dgammA, gammA, trans.par, v)
 {
 	gradient <- rep(0,3+dim(covariates)[2])
@@ -176,21 +227,6 @@ ComputeGradient = function(covariates, distances.included, dgammA, gammA, trans.
 	}
 	
 	return(-gradient)
-}
-
-ComputeGradient.C = function(covariates, distances.included, dgammA, gammA, trans.par, v)
-{
-	gradient <- rep(0,3+dim(covariates)[2])
-	pii <- rep(0,2)
-	A <- array(0,c(2,2,dim(covariates)[1]-1))
-	res <- .C('C_ComputeGradient', as.integer(dim(covariates)[1]), as.integer(dim(covariates)[2]),
-		as.double(covariates),
-		as.integer(distances.included),
-		as.double(dgammA), as.double(gammA),
-		as.double(trans.par), as.integer(v),
-		as.double(pii), as.double(A),
-		resgradient = as.double(gradient))
-	return(-res$resgradient)
 }
 
 pii.A = function(covariates, distances.included, trans.par, v)
@@ -236,16 +272,6 @@ pii.A = function(covariates, distances.included, trans.par, v)
 	A[2,2,] <- num22/(num21 + num22)
 	
 	return(list(A = A, pii = pii))
-}
-
-pii.A.C = function(covariates, distances.included, trans.par, v)
-{
-	pii <- rep(0,2)
-	A <- array(0,c(2,2,dim(covariates)[1]-1))
-	res <- .C('C_piiA', as.integer(dim(covariates)[1]), as.integer(dim(covariates)[2]), as.double(covariates),
-		as.integer(distances.included), as.double(trans.par), as.integer(v),
-		respii = as.double(pii), resA = as.double(A))
-	return(list(A = array(res$resA, dim(A)), pii = res$respii))
 }
 
 pii.A.Call = function(covariates, distances.included, trans.par, v)
