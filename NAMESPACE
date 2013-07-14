@@ -1,6 +1,6 @@
 useDynLib("fdrDEP")
 
-export("fdrDEP", "plis", "zvalueTransform", "LIS_graph", "ExpectationMaximisation", "initialisation", "loadseed", "runseed", "seedinit", "Expectation", "Maximisation", "ComputeCG", "LineSearch", "ComputeGradient", "ComputeGradient.C", "pii.A", "pii.A.C", "LineSearch.C")
+export("fdrDEP", "plis", "zvalueTransform", "LIS_graph", "ExpectationMaximisation", "initialisation", "loadseed", "runseed", "seedinit", "initATransParGammADgammA", "Expectation", "Maximisation", "ComputeCG", "LineSearch", "ComputeGradient", "ComputeGradient.C", "pii.A", "pii.A.C", "LineSearch.C")
 
 importFrom("parallel")
 

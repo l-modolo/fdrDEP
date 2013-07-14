@@ -143,6 +143,57 @@ seedinit = function(zvalues, covariates, distances.included, A11, A22, alternati
 		return(list(gammA = gammA, omega = omega))
 	}
 	
+	if(length(covariates)>0)
+	{
+		for(i in 1:2)
+		{
+			tmp = list(converged = FALSE)
+			while(!tmp$converged)
+			{
+				tmp = initATransParGammADgammA(NUM, covariates, A11, A22)
+				A = tmp$A
+				trans.par = tmp$trans.par
+				gammA = tmp$gammA
+				dgammA = tmp$dgammA
+				tmp = tryCatch({
+					glm(dgammA[i,2,] ~ covariates[-1,], family=binomial("logit"))
+				}, warning = function(e) {list(converged = FALSE)}, error = function(e) {list(converged = FALSE)})
+			}
+			
+			trans.par[2,1+i]     = tmp$coefficient[1]
+			trans.par[2,-c(1:3)] = tmp$coefficient[-1]
+		}
+		if(distances.included)
+		{
+			trans.par[2,4] = abs(trans.par[2,4])
+		}
+	}
+	else
+	{
+		tmp = initATransParGammADgammA(NUM, covariates, A11, A22)
+		gammA[(gammA[,1] == 1),1] = 0.9
+		gammA[(gammA[,1] == 0),1] = 0.1
+		gammA[(gammA[,2] == 1),2] = 0.9
+		gammA[(gammA[,2] == 0),2] = 0.1
+	}
+	
+#	if(hypothesis != "two.sided")
+#	{
+#		alternativeCompartmentNumber = alternativeCompartmentNumber*2
+#	}
+	
+	if(length(covariates)>0)
+	{
+		return(list(gammA = gammA, dgammA = dgammA, omega = omega, trans.par = trans.par))
+	}
+	else
+	{
+		return(list(gammA = gammA, dgammA = dgammA, omega = omega))
+	}
+}
+
+initATransParGammADgammA = function(NUM, covariates, A11, A22)
+{
 	A         = array(0,c(2,2, NUM-1))
 	trans.par = array(0,c(2,3+dim(covariates)[2]))
 	
@@ -166,6 +217,7 @@ seedinit = function(zvalues, covariates, distances.included, A11, A22, alternati
 		A[2,1,] = 1 - A[2,2,1]
 		tmp = try(inverse.rle( list(values=rep(1:2,NUM) ,lengths=1+rgeom( 2*NUM, rep( c( A[1,2,1], A[2,1,1] ), NUM) )))[1:NUM] - 1)
 	}
+	gammA = matrix(rep(0, NUM*2), NUM, 2, byrow=TRUE)
 	gammA[,1] = tmp
 	gammA[,2] = 1-gammA[,1]
 	
@@ -175,39 +227,5 @@ seedinit = function(zvalues, covariates, distances.included, A11, A22, alternati
 	dgammA[1,2,] = as.numeric(gammA[-dim(gammA)[1],2] == 0 & gammA[-1,2] == 1)
 	dgammA[2,2,] = as.numeric(gammA[-dim(gammA)[1],2] == 1 & gammA[-1,2] == 1)
 	
-	if(length(covariates)>0)
-	{
-		for(i in 1:2)
-		{
-			tmp = glm(dgammA[i,2,] ~ covariates[-1,], family=binomial("logit"))
-			trans.par[2,1+i]     = tmp$coefficient[1]
-			trans.par[2,-c(1:3)] = tmp$coefficient[-1]
-		}
-		if(distances.included)
-		{
-			trans.par[2,4] = abs(trans.par[2,4])
-		}
-	}
-	else
-	{
-		gammA[(gammA[,1] == 1),1] = 0.9
-		gammA[(gammA[,1] == 0),1] = 0.1
-		gammA[(gammA[,2] == 1),2] = 0.9
-		gammA[(gammA[,2] == 0),2] = 0.1
-	}
-	
-#	if(hypothesis != "two.sided")
-#	{
-#		alternativeCompartmentNumber = alternativeCompartmentNumber*2
-#	}
-	
-	if(length(covariates)>0)
-	{
-		return(list(gammA = gammA, dgammA = dgammA, omega = omega, trans.par = trans.par))
-	}
-	else
-	{
-		return(list(gammA = gammA, dgammA = dgammA, omega = omega))
-	}
+	return(list(A = A, trans.par = trans.par, gammA = gammA, dgammA = dgammA))
 }
-

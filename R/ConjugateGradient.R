@@ -16,7 +16,8 @@ ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, i
 	{
 		trans.par.old = trans.par
 		niter = niter + 1
-		tmp = LineSearch.C(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v) 
+#		tmp = LineSearch.C(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v)
+		tmp = LineSearch(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v)
 		if(length(tmp) == 1) { return(-1) }
 		
 		trans.par = tmp$trans.par
@@ -46,32 +47,6 @@ ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, i
 		tmp = pii.A.C(covariates, distances.included, trans.par, v = v)
 		return(list(pii = tmp$pii, A = tmp$A, trans.par = trans.par))
 	}
-}
-
-LineSearch.C = function(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v)
-{
-	nu = 0
-	trans.par.new = trans.par
-	pii <- rep(0,2)
-	A <- array(0,c(2,2,dim(covariates)[1]-1))
-	res <- tryCatch({
-		.C('C_LineSearch',
-			as.integer(dim(covariates)[1]),
-			as.integer(dim(covariates)[2]),
-			as.double(covariates),
-			as.integer(distances.included),
-			as.double(dgammA), 
-			as.double(gammA),
-			as.double(trans.par),
-			as.double(phi),
-			as.integer(iter.CG),
-			as.double(ptol),
-			as.integer(v),
-			resnu = as.double(nu), restrans.par.new = as.double(trans.par.new), as.double(pii), as.double(A))
-	}, warning = function(e) {return(-1)}, error = function(e) {return(-1)})
-	if(length(res) == 1)
-		return(-1)
-	return(list(nu = res$resnu, trans.par = matrix(res$restrans.par.new, nrow=2)))
 }
 
 ComputeGradient.C = function(covariates, distances.included, dgammA, gammA, trans.par, v)
@@ -135,6 +110,32 @@ ComputeCG.C = function(covariates, distances.included, dgammA, gammA, trans.par,
 	return(list(pii = res$pii, A = array(res$resA, dim(A)), trans.par = matrix(res$restrans.par.new, nrow=2)))
 }
 
+LineSearch.C = function(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v)
+{
+	nu = 0
+	trans.par.new = trans.par
+	pii <- rep(0,2)
+	A <- array(0,c(2,2,dim(covariates)[1]-1))
+	res <- tryCatch({
+		.C('C_LineSearch',
+			as.integer(dim(covariates)[1]),
+			as.integer(dim(covariates)[2]),
+			as.double(covariates),
+			as.integer(distances.included),
+			as.double(dgammA), 
+			as.double(gammA),
+			as.double(trans.par),
+			as.double(phi),
+			as.integer(iter.CG),
+			as.double(ptol),
+			as.integer(v),
+			resnu = as.double(nu), restrans.par.new = as.double(trans.par.new), as.double(pii), as.double(A))
+	}, warning = function(e) {return(-1)}, error = function(e) {return(-1)})
+	if(length(res) == 1)
+		return(-1)
+	return(list(nu = res$resnu, trans.par = matrix(res$restrans.par.new, nrow=2)))
+}
+
 LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v)
 {
 	N = dim(covariates)[1] - 1
@@ -146,6 +147,7 @@ LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, 
 	trans.par.new = trans.par
 	
 	fixe_1 = phi[,1] + sum( phi[,-c(1:3)] * covariates[1,] )
+	
 	if(distances.included)
 	{
 		fixe_1 = phi[,1] + sum( c(-phi[,4],phi[,-c(1:4)]) * covariates[1,] )
@@ -161,39 +163,44 @@ LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, 
 				fixe_2[i,j,] = ( phi[j,i+1] + rowSums( t(phi[j,-c(1:3)] * t(covariates[-1,])) ) )
 		}
 	}
+	j = 2
+	
 	
 	while(difference > ptol & niter < iter.CG)
 	{
 		niter = niter + 1
-		trans.par.new[1,] = trans.par[1,] + nu * phi[1,]
-		trans.par.new[2,] = trans.par[2,] + nu * phi[2,]
 		trans.prob = pii.A.C(covariates, distances.included, trans.par.new, v = v)
+		
 		dQ = sum( fixe_1 * (gammA[1,] - trans.prob$pii) )
 		dQ2 = -sum( fixe_1^2 * trans.prob$pii * (1 - trans.prob$pii) )
+		
+#		cat("****************************\n")
 		for(i in 1:2)
 		{
 			for(j in 1:2)
 			{
 				dQ = dQ + sum( fixe_2[i,j,] * ( dgammA[i,j,] - ( gammA[-dim(gammA)[1],i] * trans.prob$A[i,j,] ) ) )
 				dQ2 = dQ2 - sum( fixe_2[i,j,]^2 * trans.prob$A[i,j,] * ( 1 - trans.prob$A[i,j,] ) * gammA[-dim(gammA)[1], i] )
-#				cat("dQ1_tmp", sum( fixe_2[i,j,] * ( dgammA[i,j,] - ( gammA[-dim(gammA)[1],i] * trans.prob$A[i,j,] ) ) ), "\n")
-#				cat("dQ2_tmp", sum( fixe_2[i,j,]^2 * trans.prob$A[i,j,] * ( 1 - trans.prob$A[i,j,] ) * gammA[-dim(gammA)[1], i] ), "\n")
 			}
 		}
-#		cat("dQ : ", dQ, "\ndQ2 : ", dQ2, "\n")
-		nu = nu - dQ / dQ2
-		difference = abs(dQ/ dQ2)
-		if(is.na(difference) | niter > 100){
-			nu = NaN
-			break
+#		cat("dQ", dQ, "\n")
+#		cat("dQ2", dQ2, "\n")
+#		
+#		cat("****************************\n")
+		if (is.nan(dQ2) | dQ2 == 0)
+		{
+			if(v) cat("Error in line search\n")
+			return(-1)
+		}
+		else
+		{
+			nu = nu - dQ / dQ2
+			difference = abs(dQ/ dQ2)
+			trans.par.new[1,] = trans.par[1,] + nu * phi[1,]
+			trans.par.new[2,] = trans.par[2,] + nu * phi[2,]
 		}
 	}
-	if(is.nan(dQ2))
-	{
-		if(v) print("Error in line search")
-	}
-	trans.par.new[1,] = trans.par[1,] + nu * phi[1,]
-	trans.par.new[2,] = trans.par[2,] + nu * phi[2,]
+	
 	return(list(nu = nu, trans.par = trans.par.new))
 }
 
