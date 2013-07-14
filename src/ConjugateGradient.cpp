@@ -98,13 +98,13 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 			for (k=3; k < p+3; k++)
 			{
 				if (*distancesincluded && k == 3)
-					dQ_tmp += -phi(j,k) * covariates(0,k-3);
+					dQ_tmp += (-phi(j,k)) * covariates(0,k-3);
 				else
 					dQ_tmp += phi(j,k) * covariates(0,k-3);
 			}
 			dQ += (phi(j,0) + dQ_tmp) * (gammA(0,j) - pii[j]);
 		}
-		
+		Rprintf("dQ_tmp : %f\n", dQ);
 		for (i=0; i < 2; i++)
 		{
 			for (j=0; j < 2; j++)
@@ -115,7 +115,7 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 					for (k=3; k < p+3; k++)
 					{
 						if (*distancesincluded && i == 1 && k == 3)
-							dQ_tmp += -phi(j,k) * covariates(n, k-3);
+							dQ_tmp += (-phi(j,k)) * covariates(n, k-3);
 						else
 							dQ_tmp += phi(j,k) * covariates(n, k-3);
 					}
@@ -123,7 +123,7 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 				}
 			}
 		}
-//		Rprintf("dQ : %f\n", dQ);
+		Rprintf("dQ : %f\n", dQ);
 		
 		// dQ2
 		dQ2 = 0.0;
@@ -133,13 +133,14 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 			for (k=3; k < p+3; k++)
 			{
 				if (*distancesincluded && k == 3)
-					dQ2_tmp1 += -phi(j,k) * covariates(0,k-3);
+					dQ2_tmp1 += (-phi(j,k)) * covariates(0,k-3);
 				else
 					dQ2_tmp1 += phi(j,k) * covariates(0,k-3);
 			}
 			dQ2 += (phi(j,0) + dQ2_tmp1) * (phi(j,0) + dQ2_tmp1) * pii[j] * (1 - pii[j]);
 		}
 		dQ2 = -dQ2;
+		Rprintf("dQ2_tmp : %f\n", dQ2);
 		
 		for (i=0; i < 2; i++)
 		{
@@ -152,7 +153,7 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 					for (k=3; k < p+3; k++)
 					{
 						if (*distancesincluded && i == 1 && k == 3)
-							dQ2_tmp1 += -phi(j,k) * covariates(n, k-3);
+							dQ2_tmp1 += (-phi(j,k)) * covariates(n, k-3);
 						else
 							dQ2_tmp1 += phi(j,k) * covariates(n, k-3);
 					}
@@ -161,7 +162,7 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 				dQ2 -= dQ2_tmp2;
 			}
 		}
-//		Rprintf("dQ2 : %f\n", dQ2);
+		Rprintf("dQ2 : %f\n", dQ2);
 //		dQ2 = - dQ2 - dQ2_tmp2;
 		
 		if (dQ2 == 0 && v)

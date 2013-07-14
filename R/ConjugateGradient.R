@@ -173,6 +173,8 @@ LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, 
 		
 		dQ = sum( fixe_1 * (gammA[1,] - trans.prob$pii) )
 		dQ2 = -sum( fixe_1^2 * trans.prob$pii * (1 - trans.prob$pii) )
+		cat("dQ_tmp :", dQ, "\n")
+		cat("dQ2_tmp :", dQ2, "\n")
 		
 #		cat("****************************\n")
 		for(i in 1:2)
@@ -183,8 +185,8 @@ LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, 
 				dQ2 = dQ2 - sum( fixe_2[i,j,]^2 * trans.prob$A[i,j,] * ( 1 - trans.prob$A[i,j,] ) * gammA[-dim(gammA)[1], i] )
 			}
 		}
-#		cat("dQ", dQ, "\n")
-#		cat("dQ2", dQ2, "\n")
+		cat("dQ :", dQ, "\n")
+		cat("dQ2 :", dQ2, "\n")
 #		
 #		cat("****************************\n")
 		if (is.nan(dQ2) | dQ2 == 0)
