@@ -191,7 +191,7 @@ NBCORES=1
 Rprof("profiling/fitnhmmk.out")
 #Rprof("profiling/fitnhmmk_C.out")
 set.seed(63)
-Rfit.nhmm.k = fdrDEP(pvalues = x, covariates = Z, distances = Dist, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'NHMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1, iter.CG = 1, v = F, trans = T)
+Rfit.nhmm.k = fdrDEP(pvalues = x, covariates = Z, distances = Dist, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'NHMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1, iter.CG = 1, v = T, trans = T)
 Rprof()
 #summaryRprof("profiling/fitnhmmk.out")
 #summaryRprof("profiling/fitnhmmk_C.out")

@@ -78,8 +78,8 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 	int* iterCG,
 	double* ptol,
 	int* v,
+	int* allright,
 	double* nu,
-	double* transparnew,
 	double* pii,
 	double* A)
 {
@@ -88,6 +88,15 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 	int niter = 0;
 	double difference = 1.0;
 	double dQ, dQ2, tmp, dQ2_tmp;
+	
+	double* transparnew = new double[2*(3+p)];
+	for (j=0; j < 2; j++)
+	{
+		for (k=0; k < 3+p; k++)
+		{
+			transparnew(j,k) = transpar(j,k);
+		}
+	}
 	
 	while (difference > *ptol && niter < *iterCG)
 	{
@@ -171,11 +180,6 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 		
 		if (dQ2 == 0)
 		{
-			if(*v)
-			{
-				Rprintf("Error in line search\n");
-			}
-			error("Error in line search\n");
 			difference = *ptol;
 			niter = *iterCG;
 			*nu = 0;
@@ -186,6 +190,7 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 					transparnew(j,k) = transpar(j,k);
 				}
 			}
+			*allright = false;
 		}
 		else
 		{
@@ -199,7 +204,16 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 				}
 			}
 		}
+		
 	}
+	for (j=0; j < 2; j++)
+	{
+		for (k=0; k < 3+p; k++)
+		{
+			transpar(j,k) = transparnew(j,k);
+		}
+	}
+	delete[] transparnew;
 }
 
 void C_ComputeGradient(int* m_ptr, int* p_ptr,
@@ -249,24 +263,33 @@ void C_ComputeGradient(int* m_ptr, int* p_ptr,
 void C_ComputeCG(
 	int* m_ptr, int* p_ptr, double* covariates, int* distancesincluded,
 	double* dgammA, double* gammA,
-	double* transpar,
-	double* transparnew,
-	double* transparold,
-	double* phi,
-	double* nu,
 	int* iterCG,
 	double* ptol,
-	double* gradientnew,
-	double* gradientold,
-	int* v, double* pii, double* A
-	)
+	int* v, double* transpar, double* pii, double* A)
 {
 	unsigned int p = *p_ptr, m = *m_ptr;
 	int difference = 1;
 	int niter = 0;
 	int i, j, k;
-	double PR;
+	double PR, PR_tmp;
+	
+	// dyn alloc
+	double* transparold = new double[2*(3+p)];
+	double* phi = new double[2*(3+p)];
+	double* nu = new double;
+	double* gradientnew = new double[3+p];
+	double* gradientold = new double[3+p];
+	int* allright = new int;
+	
+	*nu = 0.0;
+	*allright = true;
+	
 	C_ComputeGradient(m_ptr, p_ptr, covariates, distancesincluded, dgammA, gammA, transpar, v, pii, A, gradientold);
+	for (k=0; k < 3+p; k++)
+	{
+		phi(0,k) = 0;
+		phi(1,k) = -gradientold[k];
+	}
 	
 	while (difference > *ptol && niter < *iterCG)
 	{
@@ -278,54 +301,89 @@ void C_ComputeCG(
 			}
 		}
 		niter++;
-		C_LineSearch(m_ptr, p_ptr, covariates, distancesincluded, dgammA, gammA, transpar, phi, iterCG, ptol, v, nu, transparnew, pii, A);
 		
-		for (j=0; j < 2; j++)
-		{
-			for (k=0; k < 3+p; k++)
-			{
-				transpar(j,k) = transparnew(j,k);
-			}
-		}
-		C_ComputeGradient(m_ptr, p_ptr, covariates, distancesincluded, dgammA, gammA, transpar, v, pii, A, gradientnew);
+		//lineSearch
+		C_LineSearch(m_ptr, p_ptr, covariates, distancesincluded, dgammA, gammA, transpar, phi, iterCG, ptol, v, allright, nu, pii, A);
 		
-		PR = 0.0;
-		for (k = 0; k < 3+p; k++)
+		if(*allright)
 		{
-			PR += (( gradientnew[k] - gradientold[k] ) * gradientnew[k]) / ( gradientold[k] * gradientold[k]);
-		}
-		if (PR < 0)
-		{
+			// Gradient
+			C_ComputeGradient(m_ptr, p_ptr, covariates, distancesincluded, dgammA, gammA, transpar, v, pii, A, gradientnew);
+			
+			// Polak Riverier
 			PR = 0.0;
-		}
-		
-		for (j=0; j < 2; j++)
-		{
-			for (k=0; k < 3+p; k++)
+			PR_tmp = 0.0;
+			for (k = 0; k < 3+p; k++)
 			{
-				if ( j == 0 )
-					phi(j,k) = 0;
-				else
-					phi(j,k) = -gradientnew[k] + PR * phi(j,k);
+				PR += (( gradientnew[k] - gradientold[k] ) * gradientnew[k]);
+				PR_tmp += ( gradientold[k] * gradientold[k]);
+			}
+			Rprintf("PR :  %f\n", PR);
+			Rprintf("PR_tmp :  %f\n", PR_tmp);
+			PR = PR / PR_tmp;
+			
+			Rprintf("PR :  %f\n", PR);
+			if (PR < 0)
+			{
+				PR = 0.0;
+			}
+			
+			// update phi
+			for (j=0; j < 2; j++)
+			{
+				for (k=0; k < 3+p; k++)
+				{
+					if ( j == 0 )
+						phi(j,k) = 0;
+					else
+						phi(j,k) = -gradientnew[k] + PR * phi(j,k);
+				}
+			}
+			
+			// update gradient old
+			for (k=0; k < 3+p; k++)
+				gradientold[k] = gradientnew[k];
+		
+			// fixe transpar
+			if (*distancesincluded)
+				transpar(1,3) = fabs(transpar(1,3));
+		
+			// compute difference
+			difference = 0.0;
+			for (k=1; k < 3+p; k++)
+			{
+				if (difference < fabs(transpar(1,k) - transparold(1,k)))
+					difference = fabs(transpar(1,k) - transparold(1,k));
 			}
 		}
-		
-		for (j = 0; j < 2; j++)
+		else
 		{
-			if (*distancesincluded)
-				transpar(j,3) = abs(transpar(j,3));
-		}
-		if (*distancesincluded)
-			transpar(2,4) = abs(transpar(2,4));
-		
-		difference = 0.0;
-		for (k = 1; k < 3+p; k++)
-		{
-			if (difference < abs(transpar(2,k) - transparold(2,k)))
-				difference = abs(transpar(2,k) - transparold(2,k));
+			difference = 0.0;
+			niter = *iterCG;
+			if(*v)
+				Rprintf("Error in line search\n");
+			warning("Error in line search\n");
 		}
 	}
-	C_piiA( m_ptr, p_ptr, covariates, distancesincluded, transpar, v, pii, A);
+	
+	if(*allright)
+		C_piiA( m_ptr, p_ptr, covariates, distancesincluded, transpar, v, pii, A);
+	
+	delete[] transparold;
+	delete[] phi;
+	delete nu;
+	delete[] gradientnew;
+	delete[] gradientold;
+	delete allright;
+	
+	Rprintf("pii %f %f\n", pii[0], pii[1]);
+	Rprintf("A %f %f %f %f\n", A(1,1,1), A(1,2,1), A(2,1,1), A(2,2,1));
+	Rprintf("tanspar");
+	for (k=0; k < 3+p; k++)
+	{
+		Rprintf("%f ", transpar(1,k));
+	}
+	Rprintf("\n");
 }
 
 void Call_piiA(SEXP A)

@@ -26,6 +26,9 @@ ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, i
 		if(length(gradient.new) == 1) { return(-1) }
 		
 		PR = sum((gradient.new - gradient.old)*gradient.new) / sum(gradient.old^2)
+		cat("PR :", sum((gradient.new - gradient.old)*gradient.new),"\n")
+		cat("PR_tmp :", sum(gradient.old^2),"\n")
+		cat("PR :", PR,"\n")
 		if(is.nan(PR) | PR < 0)
 		{
 			PR = 0
@@ -91,33 +94,35 @@ pii.A.C = function(covariates, distances.included, trans.par, v)
 
 ComputeCG.C = function(covariates, distances.included, dgammA, gammA, trans.par, iter.CG, ptol, v)
 {
-	trans.par.old = trans.par
-	trans.par.new = trans.par
-	gradient.new <- rep(0,3+dim(covariates)[2])
-	gradient.old <- rep(0,3+dim(covariates)[2])
-	phi = rbind(rep(0, length(gradient.old)),-gradient.old)
-	nu = 0
-	pii <- rep(0,2)
-	A <- array(0,c(2,2,dim(covariates)[1]-1))
-	.C('C_ComputeCG', as.integer(dim(covariates)[1]), as.integer(dim(covariates)[2]),
-		as.double(covariates), as.integer(distances.included),
-		as.double(dgammA), as.double(gammA),
-		as.double(trans.par), as.double(trans.par.old), as.double(trans.par.new), 
-		as.double(phi), as.double(nu),
-		as.integer(iter.CG), as.double(ptol), as.integer(v),
-		as.double(gradient.new), as.double(gradient.old),
-		as.integer(v),
-		as.double(pii), as.double(A))
-	return(list(pii = res$pii, A = array(res$resA, dim(A)), trans.par = matrix(res$restrans.par.new, nrow=2)))
+	pii = rep(0,2)
+	A = array(0,c(2,2,dim(covariates)[1]-1))
+	res = tryCatch({
+		.C('C_ComputeCG',
+			as.integer(dim(covariates)[1]),
+			as.integer(dim(covariates)[2]),
+			as.double(covariates),
+			as.integer(distances.included),
+			as.double(dgammA),
+			as.double(gammA),
+			as.integer(iter.CG),
+			as.double(ptol),
+			as.integer(v),
+			as.integer(v),
+			restrans.par = as.double(trans.par), respii = as.double(pii), resA = as.double(A))
+	}, warning = function(e) {return(-1)}, error = function(e) {return(-1)})
+	print(res$respii)
+	if(length(res) == 1)
+		return(-1)
+	return(list(pii = res$respii, A = array(res$resA, dim(A)), trans.par = matrix(res$restrans.par, nrow=2)))
 }
 
 LineSearch.C = function(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v)
 {
 	nu = 0
-	trans.par.new = trans.par
 	pii <- rep(0,2)
 	A <- array(0,c(2,2,dim(covariates)[1]-1))
-	res <- tryCatch({
+	allright = TRUE
+	res = tryCatch({
 		.C('C_LineSearch',
 			as.integer(dim(covariates)[1]),
 			as.integer(dim(covariates)[2]),
@@ -125,16 +130,17 @@ LineSearch.C = function(covariates, distances.included, dgammA, gammA, trans.par
 			as.integer(distances.included),
 			as.double(dgammA), 
 			as.double(gammA),
-			as.double(trans.par),
+			restrans.par = as.double(trans.par),
 			as.double(phi),
 			as.integer(iter.CG),
 			as.double(ptol),
 			as.integer(v),
-			resnu = as.double(nu), restrans.par.new = as.double(trans.par.new), as.double(pii), as.double(A))
+			as.integer(allright),
+			resnu = as.double(nu), as.double(pii), as.double(A))
 	}, warning = function(e) {return(-1)}, error = function(e) {return(-1)})
 	if(length(res) == 1)
 		return(-1)
-	return(list(nu = res$resnu, trans.par = matrix(res$restrans.par.new, nrow=2)))
+	return(list(nu = res$resnu, trans.par = matrix(res$restrans.par, nrow=2)))
 }
 
 LineSearch = function(Z, dist.included=TRUE, dgamma, gamma, trans.par, phi, iter.CG, ptol, v){
