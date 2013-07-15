@@ -138,14 +138,15 @@ display_data = function(x, fit, k = F)
 NUM1 = 2000 # 2000 = quick; 20000 = slow
 SIMUL=FALSE
 if (SIMUL){
-	Z = rnorm(NUM1)
-	Z = matrix(Z,ncol=1)
+	Z = cbind(rnorm(NUM1), rnorm(NUM1), rnorm(NUM1))
+	#Z = matrix(Z,ncol=2)
 	Z = apply(Z,2,scale)
 	Dist = runif(NUM1,min=0,max=1)
 	log2Dist = log2(Dist+2)
 	covariate = cbind(log2Dist,Z)
-	trans.par1.true = c(0,0,0,0,0)
-	trans.par2.true = c(0.6,-3,-1,2,-1)
+	print(head(covariate))
+	trans.par1.true = c(0,0,0,0,0,0,0)
+	trans.par2.true = c(0.6,-3,-1,2,-1,-1.5,0.5)
 	
 # compute the transition probabilities
 # given transition parameters
@@ -165,6 +166,7 @@ if (SIMUL){
 	table(theta1)
 	
 	save.image(file = paste("databenchs/bench", NUM1, ".RData", sep=""))
+	return(-1)
 } else{
 	load(paste("databenchs/bench", NUM1, ".RData", sep=""))
 }
@@ -189,9 +191,9 @@ NBCORES=1
 Rprof("profiling/fitnhmmk.out")
 #Rprof("profiling/fitnhmmk_C.out")
 set.seed(63)
-Rfit.nhmm.k = fdrDEP(pvalues = x, covariates = Z, distances = Dist, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'NHMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
+Rfit.nhmm.k = fdrDEP(pvalues = x, covariates = Z, distances = Dist, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'NHMM', seedNumber = 1, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1, iter.CG = 1, v = T, trans = T)
 Rprof()
-summaryRprof("profiling/fitnhmmk.out")
+#summaryRprof("profiling/fitnhmmk.out")
 #summaryRprof("profiling/fitnhmmk_C.out")
 
 #Rprof("profiling/fitnonemix.out")

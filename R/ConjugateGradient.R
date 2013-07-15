@@ -16,8 +16,12 @@ ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, i
 	{
 		trans.par.old = trans.par
 		niter = niter + 1
+		cat("*********************************************************************************************************************************\n")
+		tmp = LineSearch(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v)
+		cat("*********************************************************************************************************************************\n")
 		tmp = LineSearch.C(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v)
-		#tmp = LineSearch(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v)
+		cat("*********************************************************************************************************************************\n")
+		
 		if(length(tmp) == 1) { return(-1) }
 		
 		trans.par = tmp$trans.par
@@ -162,9 +166,7 @@ LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, 
 			else
 				fixe_2[i,j,] = ( phi[j,i+1] + rowSums( t(phi[j,-c(1:3)] * t(covariates[-1,])) ) )
 		}
-	}
-	j = 2
-	
+	}	
 	
 	while(difference > ptol & niter < iter.CG)
 	{
@@ -173,10 +175,9 @@ LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, 
 		
 		dQ = sum( fixe_1 * (gammA[1,] - trans.prob$pii) )
 		dQ2 = -sum( fixe_1^2 * trans.prob$pii * (1 - trans.prob$pii) )
-		#cat("dQ_tmp :", dQ, "\n")
-		#cat("dQ2_tmp :", dQ2, "\n")
+		cat("dQ_tmp :", dQ, "\n")
+		cat("dQ2_tmp :", dQ2, "\n")
 		
-#		cat("****************************\n")
 		for(i in 1:2)
 		{
 			for(j in 1:2)
@@ -185,10 +186,9 @@ LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, 
 				dQ2 = dQ2 - sum( fixe_2[i,j,]^2 * trans.prob$A[i,j,] * ( 1 - trans.prob$A[i,j,] ) * gammA[-dim(gammA)[1], i] )
 			}
 		}
-		#cat("dQ :", dQ, "\n")
-		#cat("dQ2 :", dQ2, "\n")
-#		
-#		cat("****************************\n")
+		cat("dQ :", dQ, "\n")
+		cat("dQ2 :", dQ2, "\n")
+		
 		if (is.nan(dQ2) | dQ2 == 0)
 		{
 			if(v) cat("Error in line search\n")
@@ -201,6 +201,8 @@ LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, 
 			trans.par.new[1,] = trans.par[1,] + nu * phi[1,]
 			trans.par.new[2,] = trans.par[2,] + nu * phi[2,]
 		}
+		cat("nu :", nu, "\n")
+		cat("trans.par :", trans.par.new[2,], "\n")
 	}
 	
 	return(list(nu = nu, trans.par = trans.par.new))
