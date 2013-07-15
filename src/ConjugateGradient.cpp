@@ -22,7 +22,8 @@
 #define phi(i,j) phi[i+2*(j)]
 
 // fixe_2: 2 x 2 x m
-#define fixe_2(i,j,k) fixe_2[i+2*(j)+4*(k)]
+#define phi_H0(i,j,k) phi_H0[i+2*(j)+4*(k)]
+#define tmp(i,j,k) tmp[i+2*(j)+4*(k)]
 
 extern "C" {
 
@@ -86,67 +87,62 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 	int i, j, n, k;
 	int niter = 0;
 	double difference = 1.0;
-	double dQ, dQ2, dQ_tmp, dQ2_tmp1, dQ2_tmp2;
-	
-	double* fixe_1 = new double[2];
-	double* fixe_2 = new double[2*2*m];
+	double dQ, dQ2, tmp, dQ2_tmp;
 	
 	while (difference > *ptol && niter < *iterCG)
 	{
 		niter++;
 		C_piiA( m_ptr, p_ptr, covariates, distancesincluded, transparnew, v, pii, A);
-		
+				
 		// dQ
 		dQ = 0.0;
 		for (j=0; j < 2; j++)
 		{
-			dQ_tmp = 0.0;
+			tmp = 0.0;
 			for (k=3; k < p+3; k++)
 			{
 				if (*distancesincluded && k == 3)
-					dQ_tmp += 0;
+					tmp += 0;
 				else
-					dQ_tmp += phi(j,k) * covariates(0,k-3);
+					tmp += phi(j,k) * covariates(0,k-3);
 			}
-			dQ += (phi(j,0) + dQ_tmp) * (gammA(0,j) - pii[j]);
+			dQ += (phi(j,0) + tmp) * (gammA(0,j) - pii[j]);
 		}
-		//Rprintf("dQ_tmp : %f\n", dQ);
+		//Rprintf("tmp : %f\n", dQ);
+		
 		for (i=0; i < 2; i++)
 		{
 			for (j=0; j < 2; j++)
 			{
-				for (n = 1; n < m; n++)
+				for (n = 0; n < m-1; n++)
 				{
-					dQ_tmp = 0.0;
+					tmp = 0.0;
 					for (k=3; k < p+3; k++)
 					{
-						if (*distancesincluded && k == 3)
-						{	if(i == 1)
-								dQ_tmp += (-phi(j,k)) * covariates(n, k-3);
-							else
-								dQ_tmp += phi(j,k) * covariates(n, k-3);
-						}
+						if (*distancesincluded && k == 3 && i == 1)
+							tmp += (-phi(j,k)) * covariates(n+1, k-3);
 						else
-							dQ_tmp += phi(j,k) * covariates(n, k-3);
+							tmp += phi(j,k) * covariates(n+1, k-3);
 					}
-					dQ += (phi(j,i+1) + dQ_tmp) * (dgammA(i,j,n) - gammA(n-1,i) * A(i,j,n));
+					dQ += (phi(j,i+1) + tmp) * (dgammA(i,j,n) - (gammA(n,i) * A(i,j,n)));
 				}
 			}
 		}
+		//Rprintf("dQ : %f\n", dQ);
 		
 		// dQ2
 		dQ2 = 0.0;
 		for (j=0; j < 2; j++)
 		{
-			dQ2_tmp1 = 0.0;
+			tmp = 0.0;
 			for (k=3; k < p+3; k++)
 			{
 				if (*distancesincluded && k == 3)
-					dQ2_tmp1 += 0;
+					tmp += 0;
 				else
-					dQ2_tmp1 += phi(j,k) * covariates(0,k-3);
+					tmp += phi(j,k) * covariates(0,k-3);
 			}
-			dQ2 += (phi(j,0) + dQ2_tmp1) * (phi(j,0) + dQ2_tmp1) * pii[j] * (1 - pii[j]);
+			dQ2 += (phi(j,0) + tmp) * (phi(j,0) + tmp) * pii[j] * (1 - pii[j]);
 		}
 		dQ2 = -dQ2;
 		//Rprintf("dQ2_tmp : %f\n", dQ2);
@@ -155,32 +151,30 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 		{
 			for (j=0; j < 2; j++)
 			{
-				dQ2_tmp2 = 0.0;
-				for (n = 1; n < m; n++)
+				dQ2_tmp = 0.0;
+				for (n = 0; n < m-1; n++)
 				{
-					dQ2_tmp1 = 0.0;
+					tmp = 0.0;
 					for (k=3; k < p+3; k++)
 					{
-						if (*distancesincluded && k == 3)
-						{	if(i == 1)
-								dQ_tmp += (-phi(j,k)) * covariates(n, k-3);
-							else
-								dQ_tmp += phi(j,k) * covariates(n, k-3);
-						}
+						if (*distancesincluded && k == 3 && i == 1)
+							tmp += (-phi(j,k)) * covariates(n+1, k-3);
 						else
-							dQ_tmp += phi(j,k) * covariates(n, k-3);
+							tmp += phi(j,k) * covariates(n+1, k-3);
 					}
-					dQ2_tmp2 += (phi(j,i+1) + dQ2_tmp1) * (phi(j,i+1) + dQ2_tmp1) * A(i,j,n) * (1 - A(i,j,n)) * gammA(n-1,i);
+					dQ2_tmp += ((phi(j,i+1) + tmp) * (phi(j,i+1) + tmp)) * gammA(n,i) * A(i,j,n) * (1 - A(i,j,n));
 				}
-				dQ2 -= dQ2_tmp2;
+				dQ2 -= dQ2_tmp;
 			}
 		}
-		//Rprintf("dQ : %f\n", dQ);
 		//Rprintf("dQ2 : %f\n", dQ2);
 		
-		if (dQ2 == 0 && v)
+		if (dQ2 == 0)
 		{
-			Rprintf("Error in line search\n");
+			if(*v)
+			{
+				Rprintf("Error in line search\n");
+			}
 			error("Error in line search\n");
 			difference = *ptol;
 			niter = *iterCG;
@@ -196,22 +190,16 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 		else
 		{
 			*nu = *nu - dQ / dQ2;
-			difference = abs(dQ/ dQ2);
-			//Rprintf("nu : %f\n", *nu);
-			//Rprintf("trans.par : ");
+			difference = fabs(dQ/ dQ2);
 			for (j=0; j < 2; j++)
 			{
 				for (k=0; k < 3+p; k++)
 				{
 					transparnew(j,k) = transpar(j,k) + *nu * phi(j,k);
-					if(j==1)
-						Rprintf("%f ", transparnew(j,k));
 				}
 			}
-			Rprintf("\n");
 		}
 	}
-	delete[] fixe_2;
 }
 
 void C_ComputeGradient(int* m_ptr, int* p_ptr,

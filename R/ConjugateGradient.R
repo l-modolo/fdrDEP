@@ -16,7 +16,7 @@ ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, i
 	{
 		trans.par.old = trans.par
 		niter = niter + 1
-		#tmp = LineSearch(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v)
+		
 		tmp = LineSearch.C(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v)
 		
 		if(length(tmp) == 1) { return(-1) }
@@ -137,72 +137,92 @@ LineSearch.C = function(covariates, distances.included, dgammA, gammA, trans.par
 	return(list(nu = res$resnu, trans.par = matrix(res$restrans.par.new, nrow=2)))
 }
 
-LineSearch = function(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v)
-{
-	N = dim(covariates)[1] - 1
-	nu = 0
-	niter = 0
-	difference = 1
-	phi[1,] = 0
+LineSearch = function(Z, dist.included=TRUE, dgamma, gamma, trans.par, phi, iter.CG, ptol, v){
+
+	delta1 = phi[1,]
+	delta2 = phi[2,]
+	trans.par1 = trans.par[1,]
+	trans.par2 = trans.par[2,]
 	
-	trans.par.new = trans.par
-	
-	fixe_1 = phi[,1] + sum( phi[,-c(1:3)] * covariates[1,] )
-	
-	if(distances.included)
-	{
-		fixe_1 = phi[,1] + sum( c(-phi[,4],phi[,-c(1:4)]) * covariates[1,] )
+	p <- dim(Z)[2]
+	# delta1 = (lambda1_H, sigma11_H, sigma21_H, rho1_H)
+	delta_H <- array(0,c(2,2,c(dim(Z)[1]-1)))
+	delta1_H0 <- delta1[1] + sum(delta1[-c(1:3)]*Z[1,])
+	delta2_H0 <- delta2[1] + sum(delta2[-c(1:3)]*Z[1,])
+    
+	tmp11 <- t(delta1[-c(1:3)]*t(Z[-1,]))
+	tmp21 <- t(delta1[-c(1:3)]*t(Z[-1,]))
+	tmp12 <- t(delta2[-c(1:3)]*t(Z[-1,]))
+	tmp22 <- t(delta2[-c(1:3)]*t(Z[-1,]))
+
+        if(dist.included==TRUE){
+          delta1_H0 <- delta1[1] + sum(delta1[-c(1:4)]*Z[1,-1])
+          delta2_H0 <- delta2[1] + sum(delta2[-c(1:4)]*Z[1,-1])
+  	 
+          #tmp11 <- t(c(delta1[4],delta1[-c(1:4)])*t(Z[-1,]))
+          tmp21 <- t(c(-delta1[4],delta1[-c(1:4)])*t(Z[-1,]))
+          #tmp12 <- t(c(delta2[4],delta2[-c(1:4)])*t(Z[-1,]))
+          tmp22 <- t(c(-delta2[4],delta2[-c(1:4)])*t(Z[-1,]))       
+        }
+        
+	denom11 = denom21 = denom12 = denom22 <- rep(0,dim(Z)[1]-1)
+
+	for(i in 1:p){
+		denom11 <- denom11 + tmp11[,i]
+		denom21 <- denom21 + tmp21[,i]
+		denom12 <- denom12 + tmp12[,i]
+		denom22 <- denom22 + tmp22[,i]
 	}
-	fixe_2 = array(0,c(2,2,N))
-	for(i in 1:2)
-	{
-		for(j in 1:2)
-		{
-			if(distances.included & i == 2)
-				fixe_2[i,j,] = ( phi[j,i+1] + rowSums( t(c(-phi[j,4],phi[j,-c(1:4)]) * t(covariates[-1,])) ) )
-			else
-				fixe_2[i,j,] = ( phi[j,i+1] + rowSums( t(phi[j,-c(1:3)] * t(covariates[-1,])) ) )
-		}
-	}	
 	
-	while(difference > ptol & niter < iter.CG)
-	{
-		niter = niter + 1
-		trans.prob = pii.A.C(covariates, distances.included, trans.par.new, v = v)
+	delta_H[1,1,] <- delta1[2] + denom11
+	delta_H[2,1,] <- delta1[3] + denom21
+	delta_H[1,2,] <- delta2[2] + denom12
+	delta_H[2,2,] <- delta2[3] + denom22	
+	
+	nu.new <- 0
+	difference <- 1
+	iter <- 0
+
+	while(difference > ptol & iter < iter.CG){	
+		iter <- iter + 1
+	
+		trans.par1.new <- trans.par1 + nu.new*delta1
+		trans.par2.new <- trans.par2 + nu.new*delta2
+
+		tmp.trans.prob = pii.A.C(Z, dist.included, rbind(trans.par1.new, trans.par2.new), v = v)
 		
-		dQ = sum( fixe_1 * (gammA[1,] - trans.prob$pii) )
-		dQ2 = -sum( fixe_1^2 * trans.prob$pii * (1 - trans.prob$pii) )
-		#cat("dQ_tmp :", dQ, "\n")
-		#cat("dQ2_tmp :", dQ2, "\n")
+		pii <- tmp.trans.prob$pii
+		A <- tmp.trans.prob$A
 		
-		for(i in 1:2)
-		{
-			for(j in 1:2)
-			{
-				dQ = dQ + sum( fixe_2[i,j,] * ( dgammA[i,j,] - ( gammA[-dim(gammA)[1],i] * trans.prob$A[i,j,] ) ) )
-				dQ2 = dQ2 - sum( fixe_2[i,j,]^2 * trans.prob$A[i,j,] * ( 1 - trans.prob$A[i,j,] ) * gammA[-dim(gammA)[1], i] )
+		f <- sum(c(delta1_H0,delta2_H0)*(gamma[1,] - pii))
+		#cat("dQ_tmp :", f, "\n")
+		for(i in 1:2){
+			for(j in 1:2){	
+				f <- f + sum(delta_H[i,j,]*(dgamma[i,j,] - gamma[-dim(gamma)[1],i]*A[i,j,]))
 			}
 		}
-		#cat("dQ :", dQ, "\n")
-		#cat("dQ2 :", dQ2, "\n")
-		
-		if (is.nan(dQ2) | dQ2 == 0)
-		{
-			if(v) cat("Error in line search\n")
-			return(-1)
+		#cat("dQ :", f, "\n")
+
+	     fprime <- -sum(c(delta1_H0,delta2_H0)^2*pii*(1 - pii))
+	     #cat("dQ2_tmp :", fprime, "\n")
+		for(i in 1:2){
+			for(j in 1:2){
+				fprime <- fprime - sum(delta_H[i,j,]^2*gamma[-dim(gamma)[1],i]*A[i,j,]*(1 - A[i,j,]))
+			}
 		}
-		else
-		{
-			nu = nu - dQ / dQ2
-			difference = abs(dQ/ dQ2)
-			trans.par.new[1,] = trans.par[1,] + nu * phi[1,]
-			trans.par.new[2,] = trans.par[2,] + nu * phi[2,]
+		#cat("dQ2 :", fprime, "\n")
+		nu.old <- nu.new
+		nu.new <- nu.old - f/fprime
+		difference <- abs(f)
+		if(is.na(difference)||iter > 100){
+			nu.new <- NaN
+			break
 		}
-		#cat("nu :", nu, "\n")
-		#cat("trans.par :", trans.par.new[2,], "\n")
 	}
+	trans.par1.new <- trans.par1 + nu.new*delta1
+	trans.par2.new <- trans.par2 + nu.new*delta2
 	
-	return(list(nu = nu, trans.par = trans.par.new))
+	return(list(nu=nu.new,trans.par= rbind(trans.par1.new, trans.par2.new)))
 }
 
 ComputeGradient = function(covariates, distances.included, dgammA, gammA, trans.par, v)

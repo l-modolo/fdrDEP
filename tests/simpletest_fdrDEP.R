@@ -53,8 +53,15 @@ print(phi)
 cat("\nLineSearch\n")
 tmp.ls = LineSearch(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v)
 cat("nu : ", tmp.ls$nu,"\n")
-print(tmp.ls$trans.par)
+cat("trans.par : ", tmp.ls$trans.par[2,], "\n")
+
+cat("\nfind.nu\n")
+tmp.ls.C = find.nu(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v)
+cat("nu : ", tmp.ls.C$nu,"\n")
+cat("trans.par : ", tmp.ls.C$trans.par[2,], "\n")
+
 cat("\nLineSearch.C\n")
 tmp.ls.C = LineSearch.C(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v)
 cat("nu : ", tmp.ls.C$nu,"\n")
-print(tmp.ls.C$trans.par)
+cat("trans.par : ", tmp.ls.C$trans.par[2,], "\n")
+
