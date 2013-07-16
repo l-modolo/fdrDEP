@@ -7,7 +7,7 @@ ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, i
 	
 	gradient.old = ComputeGradient.C(covariates, distances.included, dgammA, gammA, trans.par, v = v)
 	if(length(gradient.old) == 1) {return(-1)}
-	trans.par.old = trans.par
+	
 	phi = rbind(rep(0, length(gradient.old)),-gradient.old)
 	
 	difference = 1
@@ -17,18 +17,27 @@ ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, i
 		trans.par.old = trans.par
 		niter = niter + 1
 		
-		tmp = LineSearch.C(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v)
+#		cat("1*******************************************\n")
+#		print("phi")
+#		print(phi)
+#		cat("*******************************************\n")
 		
+		tmp = LineSearch.C(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v)
 		if(length(tmp) == 1) { return(-1) }
 		
 		trans.par = tmp$trans.par
+		
+#		cat("2*******************************************\n")
+#		print("nu")
+#		print(tmp$nu)
+#		print("trans par")
+#		print(trans.par)
+#		cat("*******************************************\n")
+		
 		gradient.new = ComputeGradient.C(covariates, distances.included, dgammA, gammA, trans.par, v = v)
 		if(length(gradient.new) == 1) { return(-1) }
 		
 		PR = sum((gradient.new - gradient.old)*gradient.new) / sum(gradient.old^2)
-		cat("PR :", sum((gradient.new - gradient.old)*gradient.new),"\n")
-		cat("PR_tmp :", sum(gradient.old^2),"\n")
-		cat("PR :", PR,"\n")
 		if(is.nan(PR) | PR < 0)
 		{
 			PR = 0
@@ -74,7 +83,7 @@ ComputeGradient.C = function(covariates, distances.included, dgammA, gammA, tran
 	}, warning = function(e) {return(-1)}, error = function(e) {return(-1)})
 	if(length(res) == 1)
 		return(-1)
-	return(-res$resgradient)
+	return(res$resgradient)
 }
 
 pii.A.C = function(covariates, distances.included, trans.par, v)
@@ -107,10 +116,9 @@ ComputeCG.C = function(covariates, distances.included, dgammA, gammA, trans.par,
 			as.integer(iter.CG),
 			as.double(ptol),
 			as.integer(v),
-			as.integer(v),
 			restrans.par = as.double(trans.par), respii = as.double(pii), resA = as.double(A))
 	}, warning = function(e) {return(-1)}, error = function(e) {return(-1)})
-	print(res$respii)
+	
 	if(length(res) == 1)
 		return(-1)
 	return(list(pii = res$respii, A = array(res$resA, dim(A)), trans.par = matrix(res$restrans.par, nrow=2)))

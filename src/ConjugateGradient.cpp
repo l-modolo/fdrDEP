@@ -258,14 +258,19 @@ void C_ComputeGradient(int* m_ptr, int* p_ptr,
 				+ gammA(k,1)*A(1,1,k)*covariates(k+1,0);
 		}
 	}
+	for (unsigned int k=0; k < 3+p; k++)
+	{
+		gradient[k] = -gradient[k];
+	}
 }
 
-void C_ComputeCG(
-	int* m_ptr, int* p_ptr, double* covariates, int* distancesincluded,
+void C_ComputeCG(int* m_ptr, int* p_ptr,
+	double* covariates, int* distancesincluded,
 	double* dgammA, double* gammA,
 	int* iterCG,
 	double* ptol,
-	int* v, double* transpar, double* pii, double* A)
+	int* v,
+	double* transpar, double* pii, double* A)
 {
 	unsigned int p = *p_ptr, m = *m_ptr;
 	int difference = 1;
@@ -302,8 +307,36 @@ void C_ComputeCG(
 		}
 		niter++;
 		
+//		Rprintf("1*******************************************\n");
+//		Rprintf("phi\n");
+//		for (j=0; j < 2; j++)
+//		{
+//			for (k=0; k < 3+p; k++)
+//			{
+//				Rprintf("%f ", phi(j,k));
+//			}
+//			Rprintf("\n");
+//		}
+//		Rprintf("\n");
+//		Rprintf("*******************************************\n");
+//		
+		
 		//lineSearch
 		C_LineSearch(m_ptr, p_ptr, covariates, distancesincluded, dgammA, gammA, transpar, phi, iterCG, ptol, v, allright, nu, pii, A);
+		
+//		Rprintf("2*******************************************\n");
+//		Rprintf("nu\n%f\n", *nu);
+//		Rprintf("trans par\n");
+//		for (j=0; j < 2; j++)
+//		{
+//			for (k=0; k < 3+p; k++)
+//			{
+//				Rprintf("%f ", transpar(j,k));
+//			}
+//			Rprintf("\n");
+//		}
+//		Rprintf("\n");
+//		Rprintf("*******************************************\n");
 		
 		if(*allright)
 		{
@@ -318,11 +351,8 @@ void C_ComputeCG(
 				PR += (( gradientnew[k] - gradientold[k] ) * gradientnew[k]);
 				PR_tmp += ( gradientold[k] * gradientold[k]);
 			}
-			Rprintf("PR :  %f\n", PR);
-			Rprintf("PR_tmp :  %f\n", PR_tmp);
 			PR = PR / PR_tmp;
 			
-			Rprintf("PR :  %f\n", PR);
 			if (PR < 0)
 			{
 				PR = 0.0;
@@ -376,14 +406,14 @@ void C_ComputeCG(
 	delete[] gradientold;
 	delete allright;
 	
-	Rprintf("pii %f %f\n", pii[0], pii[1]);
-	Rprintf("A %f %f %f %f\n", A(1,1,1), A(1,2,1), A(2,1,1), A(2,2,1));
-	Rprintf("tanspar");
-	for (k=0; k < 3+p; k++)
-	{
-		Rprintf("%f ", transpar(1,k));
-	}
-	Rprintf("\n");
+//	Rprintf("pii %f %f\n", pii[0], pii[1]);
+//	Rprintf("A %f %f %f %f\n", A(1,1,1), A(1,2,1), A(2,1,1), A(2,2,1));
+//	Rprintf("tanspar");
+//	for (k=0; k < 3+p; k++)
+//	{
+//		Rprintf("%f ", transpar(1,k));
+//	}
+//	Rprintf("\n");
 }
 
 void Call_piiA(SEXP A)
