@@ -23,6 +23,7 @@ ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, i
 #		cat("*******************************************\n")
 		
 		tmp = LineSearch.C(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v)
+#		tmp = LineSearch(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v)
 		if(length(tmp) == 1) { return(-1) }
 		
 		trans.par = tmp$trans.par
@@ -80,7 +81,7 @@ ComputeGradient.C = function(covariates, distances.included, dgammA, gammA, tran
 			as.double(pii),
 			as.double(A),
 			resgradient = as.double(gradient))
-	}, warning = function(e) {return(-1)}, error = function(e) {return(-1)})
+	}, warning = function(e) {return(-1)}, simpleError = function(e) {return(-1)}, error = function(e) {return(-1)})
 	if(length(res) == 1)
 		return(-1)
 	return(res$resgradient)
@@ -117,7 +118,7 @@ ComputeCG.C = function(covariates, distances.included, dgammA, gammA, trans.par,
 			as.double(ptol),
 			as.integer(v),
 			restrans.par = as.double(trans.par), respii = as.double(pii), resA = as.double(A))
-	}, warning = function(e) {return(-1)}, error = function(e) {return(-1)})
+	}, warning = function(e) {return(-1)}, simpleError = function(e) {return(-1)}, error = function(e) {return(-1)})
 	
 	if(length(res) == 1)
 		return(-1)
@@ -145,7 +146,7 @@ LineSearch.C = function(covariates, distances.included, dgammA, gammA, trans.par
 			as.integer(v),
 			as.integer(allright),
 			resnu = as.double(nu), as.double(pii), as.double(A))
-	}, warning = function(e) {return(-1)}, error = function(e) {return(-1)})
+	}, warning = function(e) {return(-1)}, simpleError = function(e) {return(-1)}, error = function(e) {return(-1)})
 	if(length(res) == 1)
 		return(-1)
 	return(list(nu = res$resnu, trans.par = matrix(res$restrans.par, nrow=2)))

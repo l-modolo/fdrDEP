@@ -1,3 +1,5 @@
 sample.interval=20000
 "<Anonymous>" "par" 
 "<Anonymous>" "par" 
+"<Anonymous>" "par" 
+"delayedAssign" "assignWrapped" ".registerS3method" "registerS3methods" "loadNamespace" "doTryCatch" "tryCatchOne" "tryCatchList" "tryCatch" "getNamespace" "asNamespace" "getExportedValue" "::" "<Anonymous>" "plis" "display_data" 

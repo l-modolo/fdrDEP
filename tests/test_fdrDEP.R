@@ -135,7 +135,7 @@ display_data = function(x, fit, k = F)
 ################################ simulated data ################################
 
 # size of the data
-NUM1 = 2000 # 2000 = quick; 20000 = slow
+NUM1 = 20000 # 2000 = quick; 20000 = slow
 SIMUL=FALSE
 if (SIMUL){
 	Z = cbind(rnorm(NUM1), rnorm(NUM1), rnorm(NUM1))
@@ -176,7 +176,7 @@ if (SIMUL){
 # complexity : fit.none.mix < fit.hmm.mix < fit.nhmm.mix
 # complexity CPU : kernel < mixnormal
 # complexity memory : mixnormal < kernel
-NBCORES=1
+NBCORES=4
 
 #Rprof("profiling/fitnonek.out")
 #Rfit.none.k = fdrDEP(pvalues = x, covariates = NULL, distances = NULL, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'none', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)
@@ -188,13 +188,13 @@ NBCORES=1
 #Rprof()
 #RsummaryRprof("profiling/fithmmk.out")
 
-Rprof("profiling/fitnhmmk.out")
-#Rprof("profiling/fitnhmmk_C.out")
+#Rprof("profiling/fitnhmmk.out")
+Rprof("profiling/fitnhmmk_C.out")
 set.seed(63)
-Rfit.nhmm.k = fdrDEP(pvalues = x, covariates = Z, distances = Dist, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'NHMM', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1, iter.CG = 1, v = F, trans = T)
+Rfit.nhmm.k = fdrDEP(pvalues = x, covariates = Z, distances = Dist, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'NHMM', seedNumber = 2000, burn = 20, ptol = 1e-6, core = NBCORES, maxiter=1, iter.CG = 1, v = F, trans = T)
 Rprof()
 #summaryRprof("profiling/fitnhmmk.out")
-#summaryRprof("profiling/fitnhmmk_C.out")
+summaryRprof("profiling/fitnhmmk_C.out")
 
 #Rprof("profiling/fitnonemix.out")
 #Rfit.none.mix = fdrDEP(pvalues = x, covariates = NULL, distances = NULL, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'mixnormal', alternativeCompartmentNumber = 2, dependency = 'none', seedNumber = 20, burn = 20, ptol = 1e-3, core = NBCORES, maxiter=1000, iter.CG = 1000, v = T, trans = T)

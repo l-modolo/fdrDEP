@@ -15,8 +15,10 @@ initialisation = function(zvalues, covariates, distances.included, hypothesis, a
 				maxiter = maxiter, 
 				iter.CG = iter.CG, 
 				working_dir = working_dir, 
-				v = v)}, 
+				v = v)
+		}, 
 		mc.cores = core, 
+		mc.preschedule = TRUE, 
 		zvalues = zvalues, 
 		covariates = covariates, 
 		distances.included = distances.included, 
@@ -29,7 +31,7 @@ initialisation = function(zvalues, covariates, distances.included, hypothesis, a
 		ptol = ptol, 
 		maxiter = maxiter, 
 		iter.CG = iter.CG, 
-		working_dir = working_dir, 
+		working_dir = working_dir,
 		v = v)
 	
 	logL = c()
@@ -50,7 +52,7 @@ initialisation = function(zvalues, covariates, distances.included, hypothesis, a
 
 loadseed = function(seedList, working_dir)
 {
-	load(paste(paste(working_dir, "seed_",sep="/"),seedList$file,sep=""))
+	load(seedList$file)
 	return(seedList)
 }
 
@@ -58,11 +60,10 @@ loadseed = function(seedList, working_dir)
 runseed = function(iter, zvalues, covariates, distances.included, hypothesis, alternativeDistribution, alternativeCompartmentNumber, dependency, seedNumber, burn, ptol, maxiter, iter.CG, working_dir, v)
 {
 	seedList = list(logL=-Inf)
-	while(length(seedList)<=2)
+	while(length(seedList) <= 2)
 	{
-		gc()
-		seed_Evar     = tryCatch({
-			seedinit(zvalues = zvalues, 
+ 	 	gc()
+		seed_Evar     = seedinit(zvalues = zvalues, 
 					covariates = covariates, 
 					distances.included = distances.included, 
 					A11 = 0.95, A22 = 0.2, 
@@ -70,9 +71,9 @@ runseed = function(iter, zvalues, covariates, distances.included, hypothesis, al
 					alternativeCompartmentNumber = alternativeCompartmentNumber, 
 					hypothesis = hypothesis, 
 					dependency = dependency,
-					v = v) }, warning = function(e) {print(e)}, error = function(e) {print(e)})
-		seed_Mvar     = tryCatch({
-			Maximisation(zvalues = zvalues, 
+					v = v)
+		
+		seed_Mvar     = Maximisation(zvalues = zvalues, 
 				covariates = covariates, 
 				distances.included = distances.included, 
 				Evar = seed_Evar, 
@@ -82,12 +83,15 @@ runseed = function(iter, zvalues, covariates, distances.included, hypothesis, al
 				dependency = dependency, 
 				iter.CG = iter.CG, 
 				ptol = ptol, 
-				v = v) }, warning = function(e) {print(e)}, error = function(e) {print(e)})
-		if( length(seed_Mvar) != 1)
+				v = v)
+		
+		if( length(seed_Mvar) == 1)
 		{
-			rm(seed_Evar)
-			seedList = tryCatch({ 
-				ExpectationMaximisation(zvalues = zvalues, 
+			if(v) print("Error in M")
+		}
+		else
+		{
+			seedList = ExpectationMaximisation(zvalues = zvalues, 
 					covariates = covariates, 
 					distances.included = distances.included, 
 					Mvar = seed_Mvar, 
@@ -98,18 +102,19 @@ runseed = function(iter, zvalues, covariates, distances.included, hypothesis, al
 					ptol = ptol, 
 					maxiter = burn, 
 					iter.CG = iter.CG, 
-					v=v) }, warning = function(e) {print(e)}, error = function(e) {print(e)})
-		}
-		else
-		{
-			if(v) print("Error in M")
+					v=v)
 		}
 	}
-	if(v) cat("seed : ",iter,"/",seedNumber,"   logL :", seedList$logL, '\n')
+	logL = seedList$logL
+	if(v) cat("seed : ",iter,"/",seedNumber,"   logL :", logL, '\n')
 	return( tryCatch({
-		seed_file = paste(paste(working_dir, "seed_",sep="/"),iter,sep="")
+		seed_file = tempfile(pattern = "seed_", tmpdir = tempdir(), fileext = ".RData")
 		save(seedList, file=seed_file)
-		return(list(logL = seedList$logL, file = iter))
+		rm(seed_Evar)
+		rm(seed_Mvar)
+		rm(seedList)
+		gc()
+		return(list(logL = logL, file = seed_file))
 	}, error = function(e) {
 		if(v) print(paste("error: in seed",iter))
 		return(list(logL = -Inf, file = NA))

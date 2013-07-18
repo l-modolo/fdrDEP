@@ -13,21 +13,19 @@ ExpectationMaximisation = function(zvalues, covariates, distances.included, Mvar
 	while(difference > ptol && niter <= maxiter)
 	{
 		niter = niter + 1
-		Evar     = tryCatch({
-			Expectation(zvalues = zvalues, 
+		Evar     = Expectation(zvalues = zvalues, 
 				Mvar = Mvar.old, 
 				hypothesis = hypothesis, 
 				alternativeDistribution = alternativeDistribution, 
 				alternativeCompartmentNumber = alternativeCompartmentNumber, 
 				dependency = dependency, 
-				v = v) }, warning = function(e) {print(e)}, error = function(e) {print(e)})
+				v = v)
 		if( length(Evar) == 1)
 		{
 			if(v) cat('Error in E', '\n')
 			converged=FALSE;
 			break
 		}
-		
 		logL  = -sum(log(Evar$c0))
 		if(dependency == "none")
 		{
@@ -40,8 +38,7 @@ ExpectationMaximisation = function(zvalues, covariates, distances.included, Mvar
 			break
 		}
 		
-		Mvar     = tryCatch({
-			Maximisation(zvalues = zvalues, 
+		Mvar     = Maximisation(zvalues = zvalues, 
 				covariates = covariates, 
 				distances.included = distances.included, 
 				Evar = Evar, 
@@ -51,7 +48,7 @@ ExpectationMaximisation = function(zvalues, covariates, distances.included, Mvar
 				dependency = dependency, 
 				iter.CG = iter.CG, 
 				ptol = ptol, 
-				v = v) }, warning = function(e) {print(e)}, error = function(e) {print(e)})
+				v = v)
 		if( length(Mvar) == 1)
 		{
 			if(v) cat('Error in M', '\n')

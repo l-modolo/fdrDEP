@@ -70,7 +70,14 @@ Expectation = function(zvalues, Mvar, hypothesis, alternativeDistribution, alter
 	alpha[1, 2] = Mvar$pii[2]*f1x[1]
 	c0[1] = 1/sum(alpha[1, ])
 	alpha[1, ] = c0[1]*alpha[1, ]
-	alpha.tmp  =  .C('calAlpha',alpha=as.numeric(alpha),c0=as.numeric(c0),as.numeric(Mvar$A),as.numeric(f0x),as.numeric(f1x),as.integer(NUM))
+	alpha.tmp  =  tryCatch({
+				.C('calAlpha',alpha=as.numeric(alpha),c0=as.numeric(c0),as.numeric(Mvar$A),as.numeric(f0x),as.numeric(f1x),as.integer(NUM))
+			 }, warning = function(e) {return(-1)}, simpleError = function(e) {return(-1)}, error = function(e) {return(-1)})
+	if(length(alpha.tmp) == 1)
+	{
+		if(v) cat("Error in calAlpha\n")
+		return(-1)
+	}
 	alpha  =  alpha.tmp$alpha
 	dim(alpha)  =  c(NUM,2)
 	c0  =  alpha.tmp$c0
@@ -79,20 +86,41 @@ Expectation = function(zvalues, Mvar, hypothesis, alternativeDistribution, alter
 	beta = matrix(rep(0, NUM*2), NUM, 2, byrow=TRUE)
 	beta[NUM, 1] = c0[NUM]
 	beta[NUM, 2] = c0[NUM]
-	beta.tmp  =  .C('calBeta',beta=as.numeric(beta),as.numeric(c0),as.numeric(Mvar$A),as.numeric(f0x),as.numeric(f1x),as.integer(NUM))
+	beta.tmp  =  tryCatch({
+				.C('calBeta',beta=as.numeric(beta),as.numeric(c0),as.numeric(Mvar$A),as.numeric(f0x),as.numeric(f1x),as.integer(NUM))
+			 }, warning = function(e) {return(-1)}, simpleError = function(e) {return(-1)}, error = function(e) {return(-1)})
+	if(length(beta.tmp) == 1)
+	{
+		if(v) cat("Error in calBeta\n")
+		return(-1)
+	}
 	beta  =  beta.tmp$beta
 	dim(beta)  =  c(NUM,2)
 	
 	# lfdr
 	lfdr = rep(0, NUM)
-	lfdr.tmp  =  .C('calLfdr',as.numeric(alpha),as.numeric(beta),lfdr=as.numeric(lfdr),as.integer(NUM))
+	lfdr.tmp  =  tryCatch({
+				.C('calLfdr',as.numeric(alpha),as.numeric(beta),lfdr=as.numeric(lfdr),as.integer(NUM))
+			 }, warning = function(e) {return(-1)}, simpleError = function(e) {return(-1)}, error = function(e) {return(-1)})
+	if(length(lfdr.tmp) == 1)
+	{
+		if(v) cat("Error in calLfdr\n")
+		return(-1)
+	}
 	lfdr  =  lfdr.tmp$lfdr
 	
 	# gammA & dgammA
 	gammA = matrix(rep(0,(NUM*2)), NUM, 2, byrow=TRUE)
 	gammA[NUM, ] = c(lfdr[NUM], 1-lfdr[NUM])
 	dgammA = array(rep(0, (NUM-1)*4), c(2, 2, (NUM-1)))
-	gammA.tmp  =  .C('calGamma',as.numeric(alpha),as.numeric(beta),as.numeric(Mvar$A),as.numeric(f0x),as.numeric(f1x),gamma=as.numeric(gammA),dgamma=as.numeric(dgammA),as.integer(NUM))
+	gammA.tmp  =  tryCatch({
+				.C('calGamma',as.numeric(alpha),as.numeric(beta),as.numeric(Mvar$A),as.numeric(f0x),as.numeric(f1x),gamma=as.numeric(gammA),dgamma=as.numeric(dgammA),as.integer(NUM))
+			 }, warning = function(e) {return(-1)}, simpleError = function(e) {return(-1)}, error = function(e) {return(-1)})
+	if(length(gammA.tmp) == 1)
+	{
+		if(v) cat("Error in calGamma\n")
+		return(-1)
+	}
 	gammA  =  gammA.tmp$gamma
 	dgammA  =  gammA.tmp$dgamma
 	dim(gammA)  =  c(NUM,2)
@@ -112,6 +140,7 @@ Expectation = function(zvalues, Mvar, hypothesis, alternativeDistribution, alter
 			}
 		}
 	}
+	
 	return(list(gammA = gammA, dgammA = dgammA, omega = omega, c0 = c0, trans.par = Mvar$trans.par))
 }
 

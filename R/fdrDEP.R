@@ -3,7 +3,8 @@ fdrDEP = function(pvalues = x, covariates = NULL, distances = NULL, observerdVal
 	cat("hypothesis",hypothesis,'\n')
 	cat("threshold",threshold,'\n')
 	cat("alternativeDistribution",alternativeDistribution,'\n')
-	cat("alternativeCompartmentNumber",alternativeCompartmentNumber,'\n')
+	if(alternativeDistribution != 'kernel')
+		cat("alternativeCompartmentNumber",alternativeCompartmentNumber,'\n')
 	cat("dependency",dependency,'\n')
 	cat("seedNumber",seedNumber,'\n')
 	cat("burn",burn,'\n')
@@ -71,16 +72,13 @@ fdrDEP = function(pvalues = x, covariates = NULL, distances = NULL, observerdVal
 		covariates = cbind(distances)
 	}
 	
-	working_dir = paste(paste("fdrtmp",format(Sys.time(), "%H_%M_%S"),sep="_"),abs(rnorm(1))*10e15,sep="_")
-	dir.create(working_dir)
 	ptol = 1e-2
 	difference = 1
 	niter = 0
 	ptol = 1e-2
 	difference = 1
 	niter = 0
-	EMvar = tryCatch({ 
-		initialisation(zvalues = zvalues, 
+	EMvar = initialisation(zvalues = zvalues, 
 				covariates = covariates, 
 				distances.included = distances.included, 
 				hypothesis = hypothesis, 
@@ -94,16 +92,15 @@ fdrDEP = function(pvalues = x, covariates = NULL, distances = NULL, observerdVal
 				maxiter = maxiter, 
 				iter.CG = iter.CG, 
 				working_dir = working_dir, 
-				v = v) }, error = function(e) {print(e);unlink(working_dir,r=T)})
+				v = v)
 	
 	best_EMvar = list()
 	while(length(best_EMvar) <= 1)
 	{
 		niter = niter + 1
-		best_EMvar = loadseed(EMvar[[niter]], working_dir)
+		best_EMvar = load((EMvar[[niter]])$file)
 		if(v) print(paste("best seed : ",best_EMvar$logL))
-		best_EMvar = tryCatch({
-			ExpectationMaximisation(zvalues = zvalues, 
+		best_EMvar = ExpectationMaximisation(zvalues = zvalues, 
 						covariates = covariates, 
 						distances.included = distances.included, 
 						Mvar = best_EMvar, 
@@ -114,16 +111,16 @@ fdrDEP = function(pvalues = x, covariates = NULL, distances = NULL, observerdVal
 						ptol = ptol, 
 						maxiter = maxiter, 
 						iter.CG = iter.CG, 
-						v=v) }, warning = function(e) {print(e)}, error = function(e) {print(e)})
-		if(length(EMvar) <= 1)
+						v=v)
+		if(length(EMvar) == 1)
 		{
 			if(v) print("error: Trying next best seed")
-			best_EMvar = loadseed(EMvar[[niter]], working_dir)
+			best_EMvar = load((EMvar[[niter]])$file)
 		}
 	}
 	
 	lfdr = best_EMvar$gammA[, 1]
-	unlink(working_dir,r=T)
+	
 	if(length(best_EMvar) > 1)
 	{
 		logL  =  best_EMvar$logL
