@@ -98,12 +98,12 @@ fdrDEP = function(pvalues = x, covariates = NULL, distances = NULL, observerdVal
 	while(length(best_EMvar) <= 1)
 	{
 		niter = niter + 1
-		best_EMvar = load((EMvar[[niter]])$file)
-		if(v) print(paste("best seed : ",best_EMvar$logL))
+		load((EMvar[[niter]])$file)
+		if(v) print(paste("best seed : ",(EMvar[[niter]])$logL))
 		best_EMvar = ExpectationMaximisation(zvalues = zvalues, 
 						covariates = covariates, 
 						distances.included = distances.included, 
-						Mvar = best_EMvar, 
+						Mvar = seedList, 
 						hypothesis = hypothesis, 
 						alternativeDistribution = alternativeDistribution, 
 						alternativeCompartmentNumber = alternativeCompartmentNumber, 

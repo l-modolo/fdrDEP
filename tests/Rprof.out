@@ -1,5 +1,6 @@
 sample.interval=20000
+"as.vector" "as.data.frame.matrix" "as.data.frame" "data.frame" "summaryRprof" 
 "<Anonymous>" "par" 
 "<Anonymous>" "par" 
 "<Anonymous>" "par" 
-"delayedAssign" "assignWrapped" ".registerS3method" "registerS3methods" "loadNamespace" "doTryCatch" "tryCatchOne" "tryCatchList" "tryCatch" "getNamespace" "asNamespace" "getExportedValue" "::" "<Anonymous>" "plis" "display_data" 
+"FUN" "vapply" "library.dynam" "loadNamespace" "doTryCatch" "tryCatchOne" "tryCatchList" "tryCatch" "getNamespace" "asNamespace" "getExportedValue" "::" "<Anonymous>" "plis" "display_data" 

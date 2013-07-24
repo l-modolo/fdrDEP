@@ -43,7 +43,7 @@ initialisation = function(zvalues, covariates, distances.included, hypothesis, a
 	j = 1
 	for(i in order(logL, decreasing = T))
 	{
-		seedList_ordered [[j]] = seedList[[i]]
+		seedList_ordered[[j]] = seedList[[i]]
 		j = j + 1
 	}
 	
@@ -59,7 +59,7 @@ loadseed = function(seedList, working_dir)
 
 runseed = function(iter, zvalues, covariates, distances.included, hypothesis, alternativeDistribution, alternativeCompartmentNumber, dependency, seedNumber, burn, ptol, maxiter, iter.CG, working_dir, v)
 {
-	seedList = list(logL=-Inf)
+	seedList = list(logL=-Inf, Mvar = -1)
 	while(length(seedList) <= 2)
 	{
  	 	gc()
@@ -106,7 +106,7 @@ runseed = function(iter, zvalues, covariates, distances.included, hypothesis, al
 		}
 	}
 	logL = seedList$logL
-	if(v) cat("seed : ",iter,"/",seedNumber,"   logL :", logL, '\n')
+#	if(v) cat("seed : ",iter,"/",seedNumber,"   logL :", logL, '\n')
 	return( tryCatch({
 		seed_file = tempfile(pattern = "seed_", tmpdir = tempdir(), fileext = ".RData")
 		save(seedList, file=seed_file)

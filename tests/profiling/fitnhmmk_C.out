@@ -3,6 +3,28 @@ sample.interval=20000
 sample.interval=20000
 sample.interval=20000
 sample.interval=20000
+sample.interval=20000
+sample.interval=20000
+sample.interval=20000
+sample.interval=20000
+"selectChildren" "mclapply" "initialisation" "fdrDEP" 
+"selectChildren" "mclapply" "initialisation" "fdrDEP" 
+"mclapply" "initialisation" "fdrDEP" 
 "mclapply" "initialisation" "fdrDEP" 
 "selectChildren" "mclapply" "initialisation" "fdrDEP" 
-"<Anonymous>" ".registerS3method" "registerS3methods" "loadNamespace" "doTryCatch" "tryCatchOne" "tryCatchList" "tryCatch" "getNamespace" "asNamespace" "getExportedValue" "::" "<Anonymous>" "mclapply" "initialisation" "fdrDEP" 
+"mclapply" "initialisation" "fdrDEP" 
+"ifelse" "initialisation" "fdrDEP" 
+"ifelse" "initialisation" "fdrDEP" 
+"ifelse" "initialisation" "fdrDEP" 
+"initialisation" "fdrDEP" 
+"matrix" "Expectation" "ExpectationMaximisation" "fdrDEP" 
+"as.numeric" "doTryCatch" "tryCatchOne" "tryCatchList" "doTryCatch" "tryCatchOne" "tryCatchList" "doTryCatch" "tryCatchOne" "tryCatchList" "tryCatch" "Expectation" "ExpectationMaximisation" "fdrDEP" 
+"as.numeric" "doTryCatch" "tryCatchOne" "tryCatchList" "doTryCatch" "tryCatchOne" "tryCatchList" "doTryCatch" "tryCatchOne" "tryCatchList" "tryCatch" "Expectation" "ExpectationMaximisation" "fdrDEP" 
+"list" "Expectation" "ExpectationMaximisation" "fdrDEP" 
+"pmax.int" "density.default" "density" "Maximisation" "ExpectationMaximisation" "fdrDEP" 
+"as.double" "doTryCatch" "tryCatchOne" "tryCatchList" "doTryCatch" "tryCatchOne" "tryCatchList" "doTryCatch" "tryCatchOne" "tryCatchList" "tryCatch" "ComputeGradient.C" "ComputeCG" "Maximisation" "ExpectationMaximisation" "fdrDEP" 
+"as.double" "pii.A.C" "ComputeCG" "Maximisation" "ExpectationMaximisation" "fdrDEP" 
+"as.numeric" "doTryCatch" "tryCatchOne" "tryCatchList" "doTryCatch" "tryCatchOne" "tryCatchList" "doTryCatch" "tryCatchOne" "tryCatchList" "tryCatch" "Expectation" "ExpectationMaximisation" "fdrDEP" 
+"ExpectationMaximisation" "fdrDEP" 
+"structure" "density.default" "density" "Maximisation" "ExpectationMaximisation" "fdrDEP" 
+"array" "ComputeGradient.C" "ComputeCG" "Maximisation" "ExpectationMaximisation" "fdrDEP" 
