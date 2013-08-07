@@ -1,9 +1,9 @@
 #!/usr/bin/Rscript
 options(width = 320)
 
-system("R CMD build .. && mv fdrDEP_1.0.2.tar.gz /tmp")
+system("R CMD build .. && mv fdrDEP_1.0.3.tar.gz /tmp")
 try(remove.packages("fdrDEP"))
-install.packages("/tmp/fdrDEP_1.0.2.tar.gz")
+install.packages("/tmp/fdrDEP_1.0.3.tar.gz")
 library(fdrDEP)
 
 # simul data
@@ -135,7 +135,7 @@ display_data = function(x, fit, k = F)
 ################################ simulated data ################################
 
 # size of the data
-NUM1 = 20000 # 2000 = quick; 20000 = slow
+NUM1 = 26063 #20000 # 2000 = quick; 20000 = slow
 SIMUL=TRUE
 if (SIMUL){
 	Z = cbind(rnorm(NUM1), rnorm(NUM1), rnorm(NUM1))
@@ -164,7 +164,7 @@ if (SIMUL){
 	### simulated unobserved true states
 	theta1 = simdat$s
 	table(theta1)
-	
+	print(trans.par2.true)
 	save.image(file = paste("databenchs/bench", NUM1, ".RData", sep=""))
 #	return(-1)
 } else{
@@ -190,8 +190,9 @@ NBCORES=8
 
 #Rprof("profiling/fitnhmmk.out")
 Rprof("profiling/fitnhmmk_C.out")
-set.seed(63)
-Rfit.nhmm.k = fdrDEP(pvalues = x, covariates = Z, distances = Dist, observerdValues = Null, hypothesis = "two.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'NHMM', seedNumber = 2000, burn = 20, ptol = 1e-6, core = NBCORES, maxiter=1, iter.CG = 1, v = T, trans = T)
+#set.seed(63)
+Rfit.nhmm.k = fdrDEP(pvalues = x, covariates = Z, distances = Dist, observerdValues = NULL, hypothesis = "one.sided", threshold = NULL, alternativeDistribution = 'kernel', alternativeCompartmentNumber = 2, dependency = 'NHMM', seedNumber = 100, burn = 20, ptol = 1e-6, core = NBCORES, maxiter=1, iter.CG = 1, v = T, trans = T)
+print(Rfit.nhmm.k$trans.par)
 Rprof()
 #summaryRprof("profiling/fitnhmmk.out")
 summaryRprof("profiling/fitnhmmk_C.out")

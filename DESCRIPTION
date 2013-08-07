@@ -1,7 +1,7 @@
 Package: fdrDEP
 Type: fdrDEP Package
 Title: Compute FDR under dependence or not using HMM, NHMM and zero inflated gaussian
-Version: 1.0.2
+Version: 1.0.3
 Date: 2013-02-05
 Author: Laurent Modolo <laurent.modolo@univ-lyon1.fr>
 Maintainer: Laurent Modolo <laurent.modolo@univ-lyon1.fr>

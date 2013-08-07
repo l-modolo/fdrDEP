@@ -106,7 +106,7 @@ runseed = function(iter, zvalues, covariates, distances.included, hypothesis, al
 		}
 	}
 	logL = seedList$logL
-#	if(v) cat("seed : ",iter,"/",seedNumber,"   logL :", logL, '\n')
+	if(v) cat("seed : ",iter,"/",seedNumber,"   logL :", logL, '\n')
 	return( tryCatch({
 		seed_file = tempfile(pattern = "seed_", tmpdir = tempdir(), fileext = ".RData")
 		save(seedList, file=seed_file)
@@ -144,6 +144,7 @@ seedinit = function(zvalues, covariates, distances.included, A11, A22, alternati
 			}
 			gammA[i,1] = proba
 		}
+		gammA[zvalues == 0, 1] = 1
 		gammA[,2] = 1-gammA[,1]
 		return(list(gammA = gammA, omega = omega))
 	}
@@ -155,7 +156,7 @@ seedinit = function(zvalues, covariates, distances.included, A11, A22, alternati
 			tmp = list(converged = FALSE)
 			while(!tmp$converged)
 			{
-				tmp = initATransParGammADgammA(NUM, covariates, A11, A22)
+				tmp = initATransParGammADgammA(NUM, zvalues, covariates, A11, A22)
 				A = tmp$A
 				trans.par = tmp$trans.par
 				gammA = tmp$gammA
@@ -197,7 +198,7 @@ seedinit = function(zvalues, covariates, distances.included, A11, A22, alternati
 	}
 }
 
-initATransParGammADgammA = function(NUM, covariates, A11, A22)
+initATransParGammADgammA = function(NUM, zvalues, covariates, A11, A22)
 {
 	A         = array(0,c(2,2, NUM-1))
 	trans.par = array(0,c(2,3+dim(covariates)[2]))
@@ -224,6 +225,7 @@ initATransParGammADgammA = function(NUM, covariates, A11, A22)
 	}
 	gammA = matrix(rep(0, NUM*2), NUM, 2, byrow=TRUE)
 	gammA[,1] = tmp
+	gammA[zvalues == 0, 1] = 1
 	gammA[,2] = 1-gammA[,1]
 	
 	dgammA    = array(0,c(2,2, NUM-1))

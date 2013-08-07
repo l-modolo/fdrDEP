@@ -93,7 +93,7 @@ ExpectationMaximisation = function(zvalues, covariates, distances.included, Mvar
 	{
 		return(-1)
 	}
-#	if(v) cat('done in ', niter, ' iterations', '\n')
+	if(v) cat('done in ', niter, ' iterations', '\n')
 	if(dependency == "none")
 	{
 		return(list(ptheta = Mvar.old$ptheta, pc=Mvar.old$pc, f0=Mvar.old$f0, f1=Mvar.old$f1, logL = logL, gammA = Evar$gammA))

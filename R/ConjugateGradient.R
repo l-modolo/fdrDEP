@@ -4,9 +4,12 @@ ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, i
 	# cat("Saving input of ComputeCG\n")
 	#save(covariates, distances.included, dgammA, gammA, trans.par, iter.CG, ptol, v, file=paste("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/databenchs/inputComputeCG",dim(covariates)[1],".RData",sep=""))
 	#stop("Done")
-	
 	gradient.old = ComputeGradient.C(covariates, distances.included, dgammA, gammA, trans.par, v = v)
-	if(length(gradient.old) == 1) {return(-1)}
+	if(length(gradient.old) == 1)
+	{
+		if(v) cat("Error in ComputeGradient\n")
+		return(-1)
+	}
 	
 	phi = rbind(rep(0, length(gradient.old)),-gradient.old)
 	
@@ -17,26 +20,21 @@ ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, i
 		trans.par.old = trans.par
 		niter = niter + 1
 		
-#		cat("1*******************************************\n")
-#		print("phi")
-#		print(phi)
-#		cat("*******************************************\n")
-		
 		tmp = LineSearch.C(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v)
-#		tmp = LineSearch(covariates, distances.included, dgammA, gammA, trans.par, phi, iter.CG, ptol, v = v)
-		if(length(tmp) == 1) { return(-1) }
+		if(length(tmp) == 1)
+		{
+			if(v) cat("Error in LineSearch\n")
+			return(-1)
+		}
 		
 		trans.par = tmp$trans.par
 		
-#		cat("2*******************************************\n")
-#		print("nu")
-#		print(tmp$nu)
-#		print("trans par")
-#		print(trans.par)
-#		cat("*******************************************\n")
-		
 		gradient.new = ComputeGradient.C(covariates, distances.included, dgammA, gammA, trans.par, v = v)
-		if(length(gradient.new) == 1) { return(-1) }
+		if(length(gradient.new) == 1)
+		{
+			if(v) cat("Error in ComputeGradient\n")
+			return(-1)
+		}
 		
 		PR = sum((gradient.new - gradient.old)*gradient.new) / sum(gradient.old^2)
 		if(is.nan(PR) | PR < 0)

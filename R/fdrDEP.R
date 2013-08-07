@@ -15,7 +15,7 @@ fdrDEP = function(pvalues = x, covariates = NULL, distances = NULL, observerdVal
 	NUM = length(pvalues)
 	cat("tests", NUM, '\n')
 	
-	
+	print("test")
 	
 	if(dependency != 'NHMM' & dependency != 'HMM' & dependency != 'none'){
 		cat('Error: modeltype must be NHMM, HMM or Indep','\n')
