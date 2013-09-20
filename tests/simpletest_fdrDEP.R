@@ -1,9 +1,9 @@
 #!/usr/bin/Rscript
 options(width = 320)
 
-system("R CMD build .. && mv fdrDEP_1.0.2.tar.gz /tmp")
+system("R CMD build .. && mv fdrDEP_1.0.3.tar.gz /tmp")
 try(remove.packages("fdrDEP"))
-install.packages("/tmp/fdrDEP_1.0.2.tar.gz")
+install.packages("/tmp/fdrDEP_1.0.3.tar.gz")
 library(fdrDEP)
 
 ################################ simulated data ################################

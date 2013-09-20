@@ -106,7 +106,7 @@ runseed = function(iter, zvalues, covariates, distances.included, hypothesis, al
 		}
 	}
 	logL = seedList$logL
-	if(v) cat("seed : ",iter,"/",seedNumber,"   logL :", logL, '\n')
+	cat("seed : ",iter,"/",seedNumber,"   logL :", logL, '\n')
 	return( tryCatch({
 		seed_file = tempfile(pattern = "seed_", tmpdir = tempdir(), fileext = ".RData")
 		save(seedList, file=seed_file)
