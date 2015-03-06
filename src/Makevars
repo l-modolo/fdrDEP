@@ -1,0 +1,4 @@
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -fopenmp
+PKG_LIBS = $(SHLIB_OPENMP_CFLAGS) -fopenmp
+PKG_CFLAGS= -fopenmp
+

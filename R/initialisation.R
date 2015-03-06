@@ -1,43 +1,11 @@
-initialisation = function(zvalues, covariates, distances.included, hypothesis, alternativeDistribution, alternativeCompartmentNumber, dependency, seedNumber, burn, ptol, core, maxiter, iter.CG, working_dir, v)
+initialisation = function(parameters)
 {
-	seedList = mclapply(1:seedNumber, FUN = function(x, zvalues, covariates, distances.included, hypothesis, alternativeDistribution, alternativeCompartmentNumber, dependency, seedNumber, burn, ptol, core, maxiter, iter.CG, working_dir, v){
-			runseed(iter = x, 
-				zvalues = zvalues, 
-				covariates = covariates, 
-				distances.included = distances.included, 
-				hypothesis = hypothesis, 
-				alternativeDistribution = alternativeDistribution, 
-				alternativeCompartmentNumber = alternativeCompartmentNumber,
-				dependency = dependency, 
-				seedNumber = seedNumber, 
-				burn = burn, 
-				ptol = ptol, 
-				maxiter = maxiter, 
-				iter.CG = iter.CG, 
-				working_dir = working_dir, 
-				v = v)
-		}, 
-		mc.cores = core, 
-		mc.preschedule = TRUE, 
-		zvalues = zvalues, 
-		covariates = covariates, 
-		distances.included = distances.included, 
-		hypothesis = hypothesis, 
-		alternativeDistribution = alternativeDistribution, 
-		alternativeCompartmentNumber = alternativeCompartmentNumber,
-		dependency = dependency, 
-		seedNumber = seedNumber, 
-		burn = burn, 
-		ptol = ptol, 
-		maxiter = maxiter, 
-		iter.CG = iter.CG, 
-		working_dir = working_dir,
-		v = v)
-	
+	seedList = mclapply(c(1:parameters[['seed_number']]), FUN = function(x, parameters){ return(runseed(iter = x, parameters = parameters)) }, mc.cores = parameters[['thread_number']], parameters = parameters)
 	logL = c()
-	for(i in 1:seedNumber)
+	for(i in 1:parameters[['seed_number']])
 	{
 		logL[i] = ifelse(length(seedList[[i]]) > 1, (seedList[[i]])$logL, -Inf)
+		if(parameters[['v']]) print(logL[i])
 	}
 	seedList_ordered = list()
 	j = 1
@@ -56,144 +24,85 @@ loadseed = function(seedList, working_dir)
 	return(seedList)
 }
 
-
-runseed = function(iter, zvalues, covariates, distances.included, hypothesis, alternativeDistribution, alternativeCompartmentNumber, dependency, seedNumber, burn, ptol, maxiter, iter.CG, working_dir, v)
+runseed = function(iter, parameters)
 {
 	seedList = list(logL=-Inf, Mvar = -1)
 	while(length(seedList) <= 2)
 	{
- 	 	gc()
-		seed_Evar     = seedinit(zvalues = zvalues, 
-					covariates = covariates, 
-					distances.included = distances.included, 
-					A11 = 0.95, A22 = 0.2, 
-					alternativeDistribution = alternativeDistribution,
-					alternativeCompartmentNumber = alternativeCompartmentNumber, 
-					hypothesis = hypothesis, 
-					dependency = dependency,
-					v = v)
-		
-		seed_Mvar     = Maximisation(zvalues = zvalues, 
-				covariates = covariates, 
-				distances.included = distances.included, 
-				Evar = seed_Evar, 
-				hypothesis = hypothesis, 
-				alternativeDistribution = alternativeDistribution, 
-				alternativeCompartmentNumber = alternativeCompartmentNumber, 
-				dependency = dependency, 
-				iter.CG = iter.CG, 
-				ptol = ptol, 
-				v = v)
-		
-		if( length(seed_Mvar) == 1)
-		{
-			if(v) print("Error in M")
-		}
-		else
-		{
-			seedList = ExpectationMaximisation(zvalues = zvalues, 
-					covariates = covariates, 
-					distances.included = distances.included, 
-					Mvar = seed_Mvar, 
-					hypothesis = hypothesis, 
-					alternativeDistribution = alternativeDistribution, 
-					alternativeCompartmentNumber = alternativeCompartmentNumber, 
-					dependency = dependency, 
-					ptol = ptol, 
-					maxiter = burn, 
-					iter.CG = iter.CG, 
-					v=v)
-		}
+		# seedList = ExpectationMaximisation(parameters = parameters, Mvar = Maximisation(parameters = parameters, Evar = seedinit(parameters = parameters)), burn = TRUE)
+		seedList = tryCatch({
+				ExpectationMaximisation(parameters = parameters, Mvar = Maximisation(parameters = parameters, Evar = seedinit(parameters = parameters)), burn = TRUE)
+			}, error = function(e) {
+				list(logL=-Inf, Mvar = -1)
+			})
 	}
 	logL = seedList$logL
-	cat("seed : ",iter,"/",seedNumber,"   logL :", logL, '\n')
+	if(parameters[['v']]) print(paste("seed : ",iter,"/",parameters[['seed_number']],"   logL :", logL, sep=""))
 	return( tryCatch({
 		seed_file = tempfile(pattern = "seed_", tmpdir = tempdir(), fileext = ".RData")
 		save(seedList, file=seed_file)
-		rm(seed_Evar)
-		rm(seed_Mvar)
-		rm(seedList)
-		gc()
 		return(list(logL = logL, file = seed_file))
 	}, error = function(e) {
-		if(v) print(paste("error: in seed",iter))
+		if(parameters[['v']]) print(paste("error: in seed",iter))
 		return(list(logL = -Inf, file = NA))
 	}))
 }
 
-seedinit = function(zvalues, covariates, distances.included, A11, A22, alternativeDistribution, alternativeCompartmentNumber, hypothesis, dependency, v)
+seedinit = function(parameters)
 {
-	NUM = length(zvalues)
-	
-	gammA = matrix(rep(0, NUM*2), NUM, 2, byrow=TRUE)
+	gammA = matrix(rep(0, parameters[['NUM']]*2), parameters[['NUM']], 2, byrow=TRUE)
 	omega = c()
-	if(alternativeDistribution != "kernel" & alternativeDistribution != "kernel.symetric" & alternativeCompartmentNumber > 1)
+	if(parameters[['f1']] != "kernel" & parameters[['f1']] != "kernel.symetric" & parameters[['f1_compartiments']] > 1)
 	{
-		omega     = t(rmultinom(NUM, alternativeCompartmentNumber, rep(1/alternativeCompartmentNumber, alternativeCompartmentNumber)))
-		omega     = omega[,]/alternativeCompartmentNumber
+		omega     = t(rmultinom(parameters[['NUM']], parameters[['f1_compartiments']], rep(1/parameters[['f1_compartiments']], parameters[['f1_compartiments']])))
+		omega     = omega[,]/parameters[['f1_compartiments']]
 	}
 	
-	if(dependency == "none")
+	if(parameters[['dependency']] == "none")
 	{
-		for( i in 1:NUM)
-		{
-			proba = 1
-			while(proba + 1e-4 >= 1 | proba - 1e-4 <= 0)
-			{
-				proba = rbeta(1, A11, 1-A11)
-			}
-			gammA[i,1] = proba
-		}
-		gammA[zvalues == 0, 1] = 1
+		gammA[,1] = ifelse(rbinom(parameters[['NUM']], 1, parameters[['pi_0']]) == 1, 1, 0)
+		if(length(gammA[gammA[,1] == 0.1,1] ) <= 1)
+			gammA[1:10,1] = 0
 		gammA[,2] = 1-gammA[,1]
 		return(list(gammA = gammA, omega = omega))
 	}
 	
-	if(length(covariates)>0)
+	if(length(parameters[['covariates']])>0)
 	{
 		for(i in 1:2)
 		{
 			tmp = list(converged = FALSE)
 			while(!tmp$converged)
 			{
-				tmp = initATransParGammADgammA(NUM, zvalues, covariates, A11, A22)
+				tmp = initATransParGammADgammA(parameters[['NUM']], parameters[['zvalues']], parameters[['covariates']], parameters[['A11']], parameters[['A22']])
 				A = tmp$A
 				trans.par = tmp$trans.par
 				gammA = tmp$gammA
 				dgammA = tmp$dgammA
 				tmp = tryCatch({
-					glm(dgammA[i,2,] ~ covariates[-1,], family=binomial("logit"))
+					glm(dgammA[i,2,] ~ parameters[['covariates']][-1,], family=binomial("logit"))
 				}, warning = function(e) {list(converged = FALSE)}, error = function(e) {list(converged = FALSE)})
 			}
 			
 			trans.par[2,1+i]     = tmp$coefficient[1]
 			trans.par[2,-c(1:3)] = tmp$coefficient[-1]
 		}
-		if(distances.included)
+		if(parameters[['distances_included']])
 		{
 			trans.par[2,4] = abs(trans.par[2,4])
 		}
-	}
-	else
-	{
-		tmp = initATransParGammADgammA(NUM, covariates, A11, A22)
-		gammA[(gammA[,1] == 1),1] = 0.9
-		gammA[(gammA[,1] == 0),1] = 0.1
-		gammA[(gammA[,2] == 1),2] = 0.9
-		gammA[(gammA[,2] == 0),2] = 0.1
-	}
-	
-#	if(hypothesis != "two.sided")
-#	{
-#		alternativeCompartmentNumber = alternativeCompartmentNumber*2
-#	}
-	
-	if(length(covariates)>0)
-	{
 		return(list(gammA = gammA, dgammA = dgammA, omega = omega, trans.par = trans.par))
 	}
 	else
 	{
+		tmp = initATransParGammADgammA(parameters[['NUM']], parameters[['zvalues']], parameters[['covariates']], parameters[['A11']], parameters[['A22']])
+		A = tmp$A
+		gammA = tmp$gammA
+		dgammA = tmp$dgammA
+		gammA[(gammA[,1] == 1),1] = 1
+		gammA[(gammA[,1] == 0),1] = 0
+		gammA[(gammA[,2] == 1),2] = 1
+		gammA[(gammA[,2] == 0),2] = 0
 		return(list(gammA = gammA, dgammA = dgammA, omega = omega))
 	}
 }

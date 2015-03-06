@@ -1,6 +1,6 @@
 #include<R.h>
 #include<Rdefines.h>
-#include<iostream>
+// #include<iostream>
 #include <stdlib.h>
 
 // Nota Bene: R stores matrices columnwise
@@ -36,7 +36,7 @@ void C_piiA(int* m_ptr, int* p_ptr,
 	double* A)
 	{
 	unsigned int p = *p_ptr, m = *m_ptr;
-	unsigned int q = 1+2+p;
+	// unsigned int q = 1+2+p;
 	double p0, p1;
 	p0 = transpar(0,0);
 	p1 = transpar(1,0);
@@ -84,7 +84,8 @@ void C_LineSearch(int* m_ptr, int* p_ptr,
 	double* A)
 {
 	unsigned int p = *p_ptr, m = *m_ptr;
-	int i, j, n, k;
+	int i, j;
+	unsigned int n, k;
 	int niter = 0;
 	double difference = 1.0;
 	double dQ, dQ2, tmp, dQ2_tmp;
@@ -272,10 +273,11 @@ void C_ComputeCG(int* m_ptr, int* p_ptr,
 	int* v,
 	double* transpar, double* pii, double* A)
 {
-	unsigned int p = *p_ptr, m = *m_ptr;
+	unsigned int p = *p_ptr;
 	int difference = 1;
 	int niter = 0;
-	int i, j, k;
+	int j;
+	unsigned int k;
 	double PR, PR_tmp;
 	
 	// dyn alloc

@@ -1,70 +1,51 @@
-ExpectationMaximisation = function(zvalues, covariates, distances.included, Mvar, hypothesis, alternativeDistribution, alternativeCompartmentNumber, dependency, ptol,  maxiter, iter.CG, v)
+ExpectationMaximisation = function(parameters, Mvar, burn = FALSE)
 {
-	NUM = length(zvalues)
 	difference = 1
 	converged=TRUE
 	niter = 0
 	logL.old = -Inf
 	logL = 0
 	T = 1
-	Evar = list()
 	Mvar.old = Mvar
-	
-	while(difference > ptol && niter <= maxiter)
+	Evar = list()
+
+	while(converged & difference > parameters[['EM_threshold']] & niter <= ifelse(burn, parameters[['EM_burn_iterations']], parameters[['EM_max_iteration']]))
 	{
 		niter = niter + 1
-		Evar     = Expectation(zvalues = zvalues, 
-				Mvar = Mvar.old, 
-				hypothesis = hypothesis, 
-				alternativeDistribution = alternativeDistribution, 
-				alternativeCompartmentNumber = alternativeCompartmentNumber, 
-				dependency = dependency, 
-				v = v)
+		Evar     = Expectation(parameters = parameters, Mvar = Mvar.old)
 		if( length(Evar) == 1)
 		{
-			if(v) cat('Error in E', '\n')
+			if(parameters[['v']]) cat('Error in E', '\n')
 			converged=FALSE;
-			break
 		}
 		logL  = -sum(log(Evar$c0))
 		
-		if(dependency == "none")
+		if(parameters[['dependency']] == "none")
 		{
 			logL = -logL
 		}
+		if(parameters[['v']]) print(logL)
 		if( logL < logL.old & abs(logL - logL.old) > 0.1 & niter > 2)
 		{
-			if(v) cat('Error in EM : logL increasing by', logL.old - logL , 'iteration :', niter, '\n')
+			if(parameters[['v']]) cat('Error in EM : logL increasing by', logL.old - logL , 'iteration :', niter, '\n')
 			converged=FALSE
-			break
 		}
 		
-		Mvar     = Maximisation(zvalues = zvalues, 
-				covariates = covariates, 
-				distances.included = distances.included, 
-				Evar = Evar, 
-				hypothesis = hypothesis, 
-				alternativeDistribution = alternativeDistribution, 
-				alternativeCompartmentNumber = alternativeCompartmentNumber, 
-				dependency = dependency, 
-				iter.CG = iter.CG, 
-				ptol = ptol, 
-				v = v)
+		Mvar     = Maximisation(parameters = parameters, Evar = Evar)
 		if( length(Mvar) == 1)
 		{
-			if(v) cat('Error in M', '\n')
+			if(parameters[['v']]) cat('Error in M', '\n')
 			converged=FALSE
-			break
 		}
 		
-		if(dependency == "none")
+		if(parameters[['dependency']] == "none")
 		{
 			df2 <- abs(Mvar.old$f1 - Mvar$f1)
 			difference <- max(df2)
 		}
 		else
 		{
-			if(length(covariates)>0)
+			if(length(parameters[['covariates']])>0)
 			{
 				df1 = abs(Mvar.old$trans.par[2,-1] - Mvar$trans.par[2,-1])
 				df2 = abs(Mvar.old$f1 - Mvar$f1)
@@ -82,23 +63,23 @@ ExpectationMaximisation = function(zvalues, covariates, distances.included, Mvar
 		
 		if( is.na(difference) )
 		{
-			if(v) cat('Error in EM : NA result', '\n')
+			if(parameters[['v']]) cat('Error in EM : NA result', '\n')
 			converged=FALSE
-			break
 		}
 		logL.old = logL
 		Mvar.old = Mvar
 	}
 	if(!converged)
 	{
+		print("not converged")
 		return(-1)
 	}
-	if(v) cat('done in ', niter, ' iterations', '\n')
-	if(dependency == "none")
+	if(parameters[['v']]) cat('done in ', niter, ' iterations', '\n')
+	if(parameters[['dependency']] == "none")
 	{
 		return(list(ptheta = Mvar.old$ptheta, pc=Mvar.old$pc, f0=Mvar.old$f0, f1=Mvar.old$f1, logL = logL, gammA = Evar$gammA))
 	}
-	if(length(covariates)>0)
+	if(length(parameters[['covariates']])>0)
 	{
 		return(list(pii=Mvar.old$pii, ptheta = Mvar.old$ptheta, pc=Mvar.old$pc, A=Mvar.old$A, trans.par = Mvar.old$trans.par, f0=Mvar.old$f0, f1=Mvar.old$f1, logL = logL, gammA = Evar$gammA))
 	}

@@ -1,9 +1,5 @@
 ComputeCG = function(covariates, distances.included, dgammA, gammA, trans.par, iter.CG, ptol, v)
 {
-	#if(v) print("CG step")
-	# cat("Saving input of ComputeCG\n")
-	#save(covariates, distances.included, dgammA, gammA, trans.par, iter.CG, ptol, v, file=paste("/home/vmiele/Collaborations/Modolo/fdrDEP/tests/databenchs/inputComputeCG",dim(covariates)[1],".RData",sep=""))
-	#stop("Done")
 	gradient.old = ComputeGradient.C(covariates, distances.included, dgammA, gammA, trans.par, v = v)
 	if(length(gradient.old) == 1)
 	{

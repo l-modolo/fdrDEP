@@ -1,0 +1,4 @@
+CC=gcc
+CXX=gcc
+PKG_CFLAGS=-fopenmp
+PKG_LIBS=-mthreads -lgomp -lpthreadGC2
