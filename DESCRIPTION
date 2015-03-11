@@ -1,4 +1,4 @@
-Package: fdrDEP
+Package: uniFDR
 Type: Package
 Title: Compute FDR under dependence or not using HMM, NHMM and zero inflated gaussian in case of unilateral testing
 Version: 1.0.4

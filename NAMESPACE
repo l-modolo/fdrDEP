@@ -1,6 +1,6 @@
-useDynLib("fdrDEP")
+useDynLib("uniFDR")
 
-export("fdrDEP", "plis", "probit", "probit_intern", "probit_one_sided", "probit_two_sided", "covariates_normalisation", "parameters_error", "LIS_graph", "ExpectationMaximisation", "initialisation", "loadseed", "runseed", "seedinit", "initATransParGammADgammA", "Expectation", "Maximisation", "ComputeGradient.C", "pii.A.C", "LineSearch.C", "LPO", "kerfdr", "bh", "pii.A.Call", "pii.A", "ComputeGradient", "LineSearch")
+export("uniFDR", "plis", "probit", "probit_intern", "probit_one_sided", "probit_two_sided", "covariates_normalisation", "parameters_error", "LIS_graph", "ExpectationMaximisation", "initialisation", "loadseed", "runseed", "seedinit", "initATransParGammADgammA", "Expectation", "Maximisation", "ComputeGradient.C", "pii.A.C", "LineSearch.C", "LPO", "kerfdr", "bh", "pii.A.Call", "pii.A", "ComputeGradient", "LineSearch")
 
 importFrom("parallel")
 

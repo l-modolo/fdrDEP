@@ -1,4 +1,4 @@
-fdrDEP = function(
+uniFDR = function(
 	pvalues, 
 	covariates = NULL, 
 	distances= NULL, 
