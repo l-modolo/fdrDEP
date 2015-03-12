@@ -1,6 +1,5 @@
 Maximisation = function(parameters, Evar)
 {
-	# if(parameters[['v']]) print("M step")
 	pc = 0
 	ptheta = apply(Evar$gammA,2,sum)/parameters[['NUM']]
 	mu0 = 0
@@ -16,8 +15,13 @@ Maximisation = function(parameters, Evar)
 	{
 		if(parameters[['hypothesis']] == "one.sided")
 		{
-			weights = (Evar$gammA[parameters[['zvalues']]!=0,2]/sum(Evar$gammA[parameters[['zvalues']]!=0,2]))
-			kern.f1  =  density(parameters[['zvalues']][parameters[['zvalues']]!=0], weights=weights, from = min(parameters[['zvalues']][parameters[['zvalues']]!=0]), cut=0, na.rm = T, kernel = "epanechnikov")
+			# weights = (Evar$gammA[parameters[['zvalues']]!=0,2]/sum(Evar$gammA[parameters[['zvalues']]!=0,2]))
+			weights = (Evar$gammA[,2]/sum(Evar$gammA[,2]))
+			# kernel epanechnikov are similar to gausian but with a smaller
+			# computation time. f1 is not defined in zero thus we estimate it
+			# starting from the first z-values superior to zero
+			kern.f1  =  density(parameters[['zvalues']], weights=weights, from = min(parameters[['zvalues']][parameters[['zvalues']]!=0]), cut=0, na.rm = T, kernel = "epanechnikov")
+			# we set the density of f1 in zero to zero
 			kern.f1$x = c(0, kern.f1$x)
 			kern.f1$y = c(0, kern.f1$y)
 		}
@@ -98,13 +102,13 @@ Maximisation = function(parameters, Evar)
 	}
 	else # with HMM dependency
 	{
-		pii =  c(0.95, 0.05)
+		pii =  c(-1, -1)
 		for (i in 1:2)
 		{
 			pii[i]  =  Evar$gammA[1, i]
 		}
 		
-		A  =  array(c(0.95, 0.05, 0.05, 0.95),c(2,2, parameters[['NUM']]-1))
+		A  =  array(c(-1, -1, -1, -1),c(2,2, parameters[['NUM']]-1))
 		for (i in 1:2)
 		{
 			for (j in 1:2)

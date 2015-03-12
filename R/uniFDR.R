@@ -128,7 +128,9 @@ probit_intern = function(parameters)
 			parameters[['mu']] = LPO_results$mu
 			parameters[['pi_0']] = LPO_results$pi_0
 		}
+		parameters[['delta']] = length(parameters[['pvalues']][parameters[['pvalues']] >= parameters[['mu']]]) / parameters[['NUM']]
 		parameters[['zvalues']] = probit_one_sided(parameters)
+		parameters[['pi_0']] = parameters[['pi_0']] * parameters[['mu']]
 	}
 	else
 	{
@@ -136,6 +138,7 @@ probit_intern = function(parameters)
 		parameters[['mu']] = 1
 		parameters[['pi_0']] = 0.8
 		parameters[['lambda']] = 0
+		parameters[['delta']] = 0
 	}
 	return(parameters)
 }

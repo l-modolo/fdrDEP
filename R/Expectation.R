@@ -1,14 +1,13 @@
 Expectation = function(parameters, Mvar)
 {
-	# if(parameters[['v']]) print("E step")
 	res = list()
-	delta = length(parameters[['zvalues']][parameters[['zvalues']]==0])/parameters[['NUM']]
 	f0x = c()
 	f1x = c()
 	gammA = matrix(rep(0, parameters[['NUM']]*2), parameters[['NUM']], 2, byrow=TRUE)
 	omega = c()
 
-	f0x = (2*dnorm(parameters[['zvalues']], Mvar$f0[1], Mvar$f0[2])) * (1-delta) * (parameters[['zvalues']]!=0) + delta * (parameters[['zvalues']]==0)
+	f0x = (2*dnorm(parameters[['zvalues']][parameters[['zvalues']]!=0], Mvar$f0[1], Mvar$f0[2]))
+	f0x[parameters[['zvalues']]==0] = 1
 	
 	# f1x
 	if(parameters[['f1']] == "kernel" | parameters[['f1']] == "kernel.symetric")
@@ -33,7 +32,7 @@ Expectation = function(parameters, Mvar)
 	
 	if(parameters[['dependency']] == "none")
 	{
-		gammA[,1]  =  Mvar$ptheta[1]*f0x / (Mvar$ptheta[1]*f0x + Mvar$ptheta[2]*f1x)
+		gammA[,1]  =  ifelse( f0x[parameters[['zvalues']]==0], 1, Mvar$ptheta[1]*f0x / (Mvar$ptheta[1]*f0x + Mvar$ptheta[2]*f1x) )
 		gammA[,2]  =  1 - gammA[,1]
 		if(parameters[['f1']] != "kernel" & parameters[['f1']] != "kernel.symetric" & parameters[['f1_compartiments']] > 1)
 		{

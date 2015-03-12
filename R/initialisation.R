@@ -29,7 +29,7 @@ runseed = function(iter, parameters)
 	seedList = list(logL=-Inf, Mvar = -1)
 	while(length(seedList) <= 2)
 	{
-		# seedList = ExpectationMaximisation(parameters = parameters, Mvar = Maximisation(parameters = parameters, Evar = seedinit(parameters = parameters)), burn = TRUE)
+		# the EM can fail, and in this case we set a logL of -Inf for the seed
 		seedList = tryCatch({
 				ExpectationMaximisation(parameters = parameters, Mvar = Maximisation(parameters = parameters, Evar = seedinit(parameters = parameters)), burn = TRUE)
 			}, error = function(e) {
@@ -37,6 +37,7 @@ runseed = function(iter, parameters)
 			})
 	}
 	logL = seedList$logL
+	# as seed can eat a loot of memory we save them on the disk
 	if(parameters[['v']]) print(paste("seed : ",iter,"/",parameters[['seed_number']],"   logL :", logL, sep=""))
 	return( tryCatch({
 		seed_file = tempfile(pattern = "seed_", tmpdir = tempdir(), fileext = ".RData")
@@ -50,14 +51,22 @@ runseed = function(iter, parameters)
 
 seedinit = function(parameters)
 {
+	# gammA is the transition matrix of the markov chain
+	# for a NHHM instead of computing the effect of covariate for the 
+	# stransition probability between each point, we compute once a transition 
+	# matrix for each point.
 	gammA = matrix(rep(0, parameters[['NUM']]*2), parameters[['NUM']], 2, byrow=TRUE)
 	omega = c()
+	
+	# omega is the vector of weight of each compartment of the f1 distribution if i's not kernel and as more than one compartment
 	if(parameters[['f1']] != "kernel" & parameters[['f1']] != "kernel.symetric" & parameters[['f1_compartiments']] > 1)
 	{
 		omega     = t(rmultinom(parameters[['NUM']], parameters[['f1_compartiments']], rep(1/parameters[['f1_compartiments']], parameters[['f1_compartiments']])))
 		omega     = omega[,]/parameters[['f1_compartiments']]
 	}
 	
+	# in the independent case the transition matrix is always the same and 
+	# correspond to a binomial distribution for the two states
 	if(parameters[['dependency']] == "none")
 	{
 		gammA[,1] = ifelse(rbinom(parameters[['NUM']], 1, parameters[['pi_0']]) == 1, 1, 0)
@@ -72,6 +81,8 @@ seedinit = function(parameters)
 		for(i in 1:2)
 		{
 			tmp = list(converged = FALSE)
+			# in the case of a NHMM the initialiation may not converge (glm)
+			# thus we loop until it does
 			while(!tmp$converged)
 			{
 				tmp = initATransParGammADgammA(parameters[['NUM']], parameters[['zvalues']], parameters[['covariates']], parameters[['A11']], parameters[['A22']])
@@ -79,6 +90,8 @@ seedinit = function(parameters)
 				trans.par = tmp$trans.par
 				gammA = tmp$gammA
 				dgammA = tmp$dgammA
+				# we fit the transition parameter to the HMM with a general 
+				# linear model which may not converge
 				tmp = tryCatch({
 					glm(dgammA[i,2,] ~ parameters[['covariates']][-1,], family=binomial("logit"))
 				}, warning = function(e) {list(converged = FALSE)}, error = function(e) {list(converged = FALSE)})
@@ -87,6 +100,8 @@ seedinit = function(parameters)
 			trans.par[2,1+i]     = tmp$coefficient[1]
 			trans.par[2,-c(1:3)] = tmp$coefficient[-1]
 		}
+		# we force the transition parameter associated with the distance to
+		# be positif
 		if(parameters[['distances_included']])
 		{
 			trans.par[2,4] = abs(trans.par[2,4])
@@ -107,6 +122,7 @@ seedinit = function(parameters)
 	}
 }
 
+# function to generate HMM state with random transition probability
 initATransParGammADgammA = function(NUM, zvalues, covariates, A11, A22)
 {
 	A         = array(0,c(2,2, NUM-1))
@@ -124,12 +140,13 @@ initATransParGammADgammA = function(NUM, zvalues, covariates, A11, A22)
 		while(A_22 + 1e-4 >= 1 | A_22 - 1e-4 <= 0)
 		{
 			A_22 = rbeta(1, A22, 1-A22)
-		}		
-				
+		}
+		
 		A[1,1,] = A_11
 		A[1,2,] = 1 - A[1,1,1]
 		A[2,2,] = A_22
 		A[2,1,] = 1 - A[2,2,1]
+		# the fastess way to generate HMM states in R
 		tmp = try(inverse.rle( list(values=rep(1:2,NUM) ,lengths=1+rgeom( 2*NUM, rep( c( A[1,2,1], A[2,1,1] ), NUM) )))[1:NUM] - 1)
 	}
 	gammA = matrix(rep(0, NUM*2), NUM, 2, byrow=TRUE)

@@ -22,7 +22,7 @@ ExpectationMaximisation = function(parameters, Mvar, burn = FALSE)
 		
 		if(parameters[['dependency']] == "none")
 		{
-			logL = -logL
+			# logL = -logL
 		}
 		if(parameters[['v']]) print(logL)
 		if( logL < logL.old & abs(logL - logL.old) > 0.1 & niter > 2)
