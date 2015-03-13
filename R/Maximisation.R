@@ -1,7 +1,8 @@
 Maximisation = function(parameters, Evar)
 {
 	pc = 0
-	ptheta = apply(Evar$gammA,2,sum)/parameters[['NUM']]
+	ptheta = apply(Evar$gammA,2,sum)/(parameters[['NUM']])
+	# ptheta = apply(Evar$gammA[parameters[[zvalues]]!=0,],2,sum)/(parameters[['NUM']]*(1-parameters[['delta']]))
 	mu0 = 0
 	q6 = 0
 	sd0 = 1
@@ -16,7 +17,7 @@ Maximisation = function(parameters, Evar)
 		if(parameters[['hypothesis']] == "one.sided")
 		{
 			# weights = (Evar$gammA[parameters[['zvalues']]!=0,2]/sum(Evar$gammA[parameters[['zvalues']]!=0,2]))
-			weights = (Evar$gammA[,2]/sum(Evar$gammA[,2]))
+			weights = Evar$gammA[, 2]/sum(Evar$gammA[, 2])
 			# kernel epanechnikov are similar to gausian but with a smaller
 			# computation time. f1 is not defined in zero thus we estimate it
 			# starting from the first z-values superior to zero

@@ -3,7 +3,7 @@ plis = function (LIS, fdr = 0.05, adjust = F)
 	m = length(LIS)
 	s.LIS = sort(LIS)
 	for (i in 1:m) {
-		if (mean(s.LIS[1:i]) >= fdr) 
+		if (mean(s.LIS[1:i]) > fdr) 
 		break
 	}
 	nNonNull = i - 1
