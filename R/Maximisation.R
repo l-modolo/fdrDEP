@@ -2,7 +2,7 @@ Maximisation = function(parameters, Evar)
 {
 	pc = 0
 	ptheta = apply(Evar$gammA,2,sum)/(parameters[['NUM']])
-	# ptheta = apply(Evar$gammA[parameters[[zvalues]]!=0,],2,sum)/(parameters[['NUM']]*(1-parameters[['delta']]))
+	# ptheta = apply(Evar$gammA[parameters[[zvalues]]!=0,],2,sum)/(parameters[['NUM']]*(1-parameters[['kappa']]))
 	mu0 = 0
 	q6 = 0
 	sd0 = 1

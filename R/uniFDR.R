@@ -111,6 +111,7 @@ probit = function(pvalues, hypothesis = "one.sided", mu = -1, pi_0 = -1, thread_
 	parameters[['pvalues']] = pvalues
 	parameters[['hypothesis']] = hypothesis
 	parameters[['mu']] = mu
+	parameters[['kappa']] = 0
 	parameters[['pi_0']] = pi_0
 	parameters[['thread_number']] = thread_number
 	parameters[['side']] = side
@@ -127,8 +128,8 @@ probit_intern = function(parameters)
 			parameters[['lambda']] = LPO_results$lambda
 			parameters[['mu']] = LPO_results$mu
 			parameters[['pi_0']] = LPO_results$pi_0
+			parameters[['kappa']] = length(parameters[['pvalues']][parameters[['pvalues']] >= parameters[['mu']]]) / parameters[['NUM']]
 		}
-		parameters[['delta']] = length(parameters[['pvalues']][parameters[['pvalues']] >= parameters[['mu']]]) / parameters[['NUM']]
 		parameters[['zvalues']] = probit_one_sided(parameters)
 		parameters[['pi_0']] = parameters[['pi_0']] * parameters[['mu']]
 	}
@@ -138,7 +139,7 @@ probit_intern = function(parameters)
 		parameters[['mu']] = 1
 		parameters[['pi_0']] = 0.8
 		parameters[['lambda']] = 0
-		parameters[['delta']] = 0
+		parameters[['kappa']] = 0
 	}
 	return(parameters)
 }

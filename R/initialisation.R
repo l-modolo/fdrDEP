@@ -69,7 +69,7 @@ seedinit = function(parameters)
 	# correspond to a binomial distribution for the two states
 	if(parameters[['dependency']] == "none")
 	{
-		gammA[,1] = ifelse(rbinom(parameters[['NUM']], 1, parameters[['pi_0']]) == 1, 1, 0)
+		gammA[,1] = ifelse(rbinom(parameters[['NUM']], 1, parameters[['pi_0']] + parameters[['kappa']] ) == 1, 1, 0)
 		if(length(gammA[gammA[,1] == 0.1,1] ) <= 1)
 			gammA[1:10,1] = 0
 		gammA[,2] = 1-gammA[,1]
